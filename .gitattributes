@@ -1,0 +1,16 @@
+# Normalize every text file to LF in the repo and in the working tree.
+# Prettier (and therefore eslint) expects LF; without this, cloning on Windows
+# checks everything out as CRLF and every line of every file lints as an error.
+* text=auto eol=lf
+
+# Binaries: never touched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg text eol=lf
+*.woff binary
+*.woff2 binary
+*.ttf binary
