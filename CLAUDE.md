@@ -104,6 +104,48 @@ Postgres via Supabase. Schema changes are timestamped SQL files in
 `supabase/migrations/`, applied in order. Never edit a migration that has been
 applied to a real project — add another.
 
+## Matches: regular season and knockouts share one table
+
+`matches.stage` is `regular` for the league phase and a knockout round
+otherwise, and `round_number` means two different things depending on which:
+the league round, or the match's position within that knockout stage.
+
+**Any query about the league phase must filter `stage = 'regular'`.** Forgetting
+it showed two semi-finals as rounds 1 and 2 of the fixture, made the clash
+detector report teams playing twice in rounds that did not exist, and — the
+part nobody noticed — counted finals results as league points on the ladder.
+
+A knockout that finishes level records `winner_team_id`. The score stays what
+was played; deriving a winner from a doctored scoreline would corrupt goal
+difference for the league phase of the same competition.
+
+## Dates and times
+
+- Kick-offs are `timestamptz`, rendered in the organization's zone. The helpers
+  in `src/lib/time/zoned.ts` are the only place that converts, and a
+  `datetime-local` input is always read as the league's wall clock, never the
+  browser's.
+- **Dates are written dd/mm/yyyy everywhere.** `03/10` means two different days
+  depending on the reader, and a fixture list is where that sends someone to a
+  pitch on the wrong day. Use `formatDate`, `formatPlainDate` and
+  `formatKickoff`; do not call `Intl` directly in a component.
+
+## Pure logic lives in src/lib
+
+Fixture generation, slot allocation, standings, brackets and suspensions are all
+pure functions with no database and no time zones — plain local dates and times
+in, plain data out. That is what makes them testable, and every real bug found
+so far has been in one of them and caught by a test:
+
+- a draw that left one team home seven times and away never;
+- a scheduler that placed rounds 4-6 a month before a hand-placed round 3;
+- a bracket seeded alphabetically because raw snake_case rows were passed to
+  `computeStandings` behind an `as unknown as` cast.
+
+That last one is the rule worth remembering: **never cast Supabase rows into a
+domain type.** Map the columns explicitly. The cast turns a compile error into a
+silent, plausible-looking wrong answer.
+
 ## Testing
 
 Vitest. The suite is deliberately narrow: pure logic where correctness matters
