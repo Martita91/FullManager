@@ -23,6 +23,7 @@ export interface Competition {
   pointsWin: number;
   pointsDraw: number;
   pointsLoss: number;
+  suspensionYellowCards: number;
   status: CompetitionStatus;
   isPublished: boolean;
   teamCount: number;

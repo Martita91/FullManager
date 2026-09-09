@@ -80,19 +80,60 @@ export function isoToZonedInput(iso: string | null, timeZone: string): string {
   return `${get("year")}-${get("month")}-${get("day")}T${hour}:${get("minute")}`;
 }
 
-/** Human-readable kick-off, in the league's zone. */
-export function formatKickoff(iso: string | null, timeZone: string, locale = "en"): string {
+/**
+ * Dates are written dd/mm/yyyy everywhere in this app.
+ *
+ * Not a stylistic choice: 03/10 is the 3rd of October to most of the world and
+ * the 10th of March to the United States, and a fixture list is exactly the
+ * kind of document where guessing wrong sends somebody to a pitch on the wrong
+ * day. One unambiguous order, applied consistently, beats a locale-dependent
+ * one that silently changes meaning.
+ */
+export function formatDate(iso: string | null, timeZone: string): string {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
 
-  return new Intl.DateTimeFormat(locale, {
+  const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone,
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(date);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("day")}/${get("month")}/${get("year")}`;
+}
+
+/** Just the clock, in the league's zone. */
+export function formatTime(iso: string | null, timeZone: string): string {
+  if (!iso) return "";
+  const input = isoToZonedInput(iso, timeZone);
+  return input ? input.slice(11) : "";
+}
+
+/** Short weekday, for a fixture list where the day matters more than the date. */
+export function formatWeekday(iso: string | null, timeZone: string): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short" }).format(date);
+}
+
+/** "Sat 10/10/2026 · 09:00" — the full kick-off, in the league's zone. */
+export function formatKickoff(iso: string | null, timeZone: string): string {
+  if (!iso) return "";
+  const day = formatWeekday(iso, timeZone);
+  const date = formatDate(iso, timeZone);
+  const time = formatTime(iso, timeZone);
+  if (!date) return "";
+  return `${day} ${date} · ${time}`;
+}
+
+/** A plain calendar date ("2026-10-03") as dd/mm/yyyy, with no zone involved. */
+export function formatPlainDate(date: string | null): string {
+  if (!date) return "";
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date.trim());
+  if (!match) return date;
+  return `${match[3]}/${match[2]}/${match[1]}`;
 }

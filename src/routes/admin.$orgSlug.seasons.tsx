@@ -11,6 +11,7 @@ import {
 import type { Season, SeasonStatus } from "@/features/catalog/types";
 import { SEASON_STATUSES } from "@/features/catalog/types";
 import { useOrgMembership } from "@/features/organizations/useOrgMembership";
+import { formatPlainDate } from "@/lib/time/zoned";
 import { CatalogPage } from "@/components/CatalogPage";
 import {
   Button,
@@ -175,8 +176,8 @@ function SeasonsPage() {
             {seasons.data.map((season: Season) => (
               <tr key={season.id}>
                 <Td className="font-medium">{season.name}</Td>
-                <Td>{season.startsOn ?? "—"}</Td>
-                <Td>{season.endsOn ?? "—"}</Td>
+                <Td className="num">{formatPlainDate(season.startsOn) || "—"}</Td>
+                <Td className="num">{formatPlainDate(season.endsOn) || "—"}</Td>
                 <Td>{t(`status.${season.status}`)}</Td>
                 {canEdit && (
                   <Td className="text-right whitespace-nowrap">

@@ -17,6 +17,7 @@ interface CompetitionRow {
   points_win: number;
   points_draw: number;
   points_loss: number;
+  suspension_yellow_cards: number;
   status: CompetitionStatus;
   is_published: boolean;
   seasons: { name: string } | null;
@@ -26,7 +27,7 @@ interface CompetitionRow {
 }
 
 const SELECT =
-  "id, name, season_id, division_id, format, rounds, points_win, points_draw, points_loss, status, is_published, seasons(name), divisions(name), team_registrations(count), matches(count)";
+  "id, name, season_id, division_id, format, rounds, points_win, points_draw, points_loss, suspension_yellow_cards, status, is_published, seasons(name), divisions(name), team_registrations(count), matches(count)";
 
 const toCompetition = (r: CompetitionRow): Competition => ({
   id: r.id,
@@ -40,6 +41,7 @@ const toCompetition = (r: CompetitionRow): Competition => ({
   pointsWin: r.points_win,
   pointsDraw: r.points_draw,
   pointsLoss: r.points_loss,
+  suspensionYellowCards: r.suspension_yellow_cards,
   status: r.status,
   isPublished: r.is_published,
   teamCount: r.team_registrations?.[0]?.count ?? 0,
@@ -88,6 +90,7 @@ const competitionInput = z.object({
   pointsWin: z.coerce.number().int().min(0).max(10),
   pointsDraw: z.coerce.number().int().min(0).max(10),
   pointsLoss: z.coerce.number().int().min(0).max(10),
+  suspensionYellowCards: z.coerce.number().int().min(0).max(20),
 });
 
 export const createCompetition = createServerFn({ method: "POST" })
@@ -110,6 +113,7 @@ export const createCompetition = createServerFn({ method: "POST" })
         points_win: data.pointsWin,
         points_draw: data.pointsDraw,
         points_loss: data.pointsLoss,
+        suspension_yellow_cards: data.suspensionYellowCards,
       })
       .select("id")
       .single();
@@ -138,6 +142,7 @@ export const updateCompetition = createServerFn({ method: "POST" })
         points_win: data.pointsWin,
         points_draw: data.pointsDraw,
         points_loss: data.pointsLoss,
+        suspension_yellow_cards: data.suspensionYellowCards,
       })
       .eq("id", data.id);
 

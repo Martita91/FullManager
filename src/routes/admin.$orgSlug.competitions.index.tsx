@@ -40,6 +40,7 @@ interface FormState {
   pointsWin: string;
   pointsDraw: string;
   pointsLoss: string;
+  suspensionYellowCards: string;
 }
 
 const FORMAT_LABEL: Record<CompetitionFormat, string> = {
@@ -90,6 +91,7 @@ function CompetitionsPage() {
         pointsWin: state.pointsWin,
         pointsDraw: state.pointsDraw,
         pointsLoss: state.pointsLoss,
+        suspensionYellowCards: state.suspensionYellowCards,
       };
       return state.id
         ? updateCompetition({ data: { ...payload, id: state.id } })
@@ -127,6 +129,7 @@ function CompetitionsPage() {
       pointsWin: "3",
       pointsDraw: "1",
       pointsLoss: "0",
+      suspensionYellowCards: "5",
     });
   };
 
@@ -227,6 +230,15 @@ function CompetitionsPage() {
                 max={10}
                 value={form.pointsDraw}
                 onChange={(e) => setForm({ ...form, pointsDraw: e.target.value })}
+              />
+            </Field>
+            <Field label={t("discipline.threshold")} hint={t("discipline.thresholdHelp")}>
+              <Input
+                type="number"
+                min={0}
+                max={20}
+                value={form.suspensionYellowCards}
+                onChange={(e) => setForm({ ...form, suspensionYellowCards: e.target.value })}
               />
             </Field>
             <div className="flex items-end gap-2 sm:col-span-3">

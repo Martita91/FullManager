@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatKickoff, isoToZonedInput, zonedInputToIso } from "./zoned";
+import {
+  formatDate,
+  formatKickoff,
+  formatPlainDate,
+  formatTime,
+  isoToZonedInput,
+  zonedInputToIso,
+} from "./zoned";
 
 describe("zoned kick-off times", () => {
   it("reads a wall clock as belonging to the league's zone, not the browser's", () => {
@@ -51,5 +58,30 @@ describe("zoned kick-off times", () => {
     const iso = "2026-10-03T01:00:00.000Z";
     expect(formatKickoff(iso, "Australia/Perth")).toContain("09:00");
     expect(formatKickoff(iso, "UTC")).toContain("01:00");
+  });
+
+  it("writes dates dd/mm/yyyy, never the American order", () => {
+    // 3 October, which a US format would render as 10/03.
+    const iso = "2026-10-03T01:00:00.000Z";
+    expect(formatDate(iso, "Australia/Perth")).toBe("03/10/2026");
+    expect(formatPlainDate("2026-10-03")).toBe("03/10/2026");
+  });
+
+  it("puts the day, date and time in one readable kick-off", () => {
+    const iso = "2026-10-03T01:00:00.000Z";
+    expect(formatKickoff(iso, "Australia/Perth")).toBe("Sat 03/10/2026 · 09:00");
+  });
+
+  it("crosses midnight into the right local day", () => {
+    // 22:00 UTC is already the next morning in Perth.
+    const iso = "2026-10-03T22:00:00.000Z";
+    expect(formatDate(iso, "Australia/Perth")).toBe("04/10/2026");
+    expect(formatTime(iso, "Australia/Perth")).toBe("06:00");
+  });
+
+  it("leaves a malformed plain date alone rather than mangling it", () => {
+    expect(formatPlainDate("")).toBe("");
+    expect(formatPlainDate(null)).toBe("");
+    expect(formatPlainDate("not a date")).toBe("not a date");
   });
 });

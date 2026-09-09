@@ -18,6 +18,7 @@ import {
 import { MatchCard } from "@/features/competitions/MatchCard";
 import { SchedulingTab } from "@/features/scheduling/SchedulingTab";
 import { FinalsTab } from "@/features/finals/FinalsTab";
+import { DisciplineTab } from "@/features/discipline/DisciplineTab";
 import type { FixturePreview } from "@/features/competitions/types";
 import { listTeams } from "@/features/catalog/teams.functions";
 import { listPeople } from "@/features/catalog/people.functions";
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/admin/$orgSlug/competitions/$competitionI
   component: CompetitionDetail,
 });
 
-type Tab = "teams" | "fixture" | "scheduling" | "ladder" | "finals";
+type Tab = "teams" | "fixture" | "scheduling" | "ladder" | "discipline" | "finals";
 
 function CompetitionDetail() {
   const { t } = useTranslation();
@@ -75,6 +76,7 @@ function CompetitionDetail() {
     { key: "fixture", label: t("competitions.tabFixture") },
     { key: "scheduling", label: t("scheduling.tab") },
     { key: "ladder", label: t("competitions.tabLadder") },
+    { key: "discipline", label: t("discipline.tab") },
     { key: "finals", label: t("finals.tab") },
   ];
 
@@ -153,6 +155,7 @@ function CompetitionDetail() {
           }}
         />
       )}
+      {tab === "discipline" && <DisciplineTab orgSlug={orgSlug} competitionId={competitionId} />}
       {tab === "finals" && (
         <FinalsTab
           orgSlug={orgSlug}

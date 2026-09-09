@@ -11,6 +11,7 @@ import {
   type AllocationPreview,
 } from "./scheduling.functions";
 import { listRegistrations } from "@/features/competitions/competitions.functions";
+import { formatPlainDate } from "@/lib/time/zoned";
 import {
   Button,
   Card,
@@ -174,7 +175,9 @@ export function SchedulingTab({
                         {row.homeTeamName} v {row.awayTeamName}
                       </Td>
                       <Td className="whitespace-nowrap">
-                        {row.date} <span className="num">{row.time}</span>
+                        <span className="num">{formatPlainDate(row.date)}</span>
+                        {" · "}
+                        <span className="num font-medium">{row.time}</span>
                       </Td>
                       <Td>
                         {row.venueName} · {row.pitchName}

@@ -52,10 +52,15 @@ export const listMatches = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<MatchRow[]> => {
     await requireOrgAccess(context.supabase, context.userId, data.orgSlug);
 
+    // Regular season only. Knockout matches number their position within a
+    // stage in the same column, so including them here showed two semi-finals
+    // as "round 1" and "round 2" of the league and had the clash detector
+    // reporting teams playing twice in a round that never existed.
     const { data: rows, error } = await context.supabase
       .from("matches")
       .select(MATCH_SELECT)
       .eq("competition_id", data.competitionId)
+      .eq("stage", "regular")
       .order("round_number", { nullsFirst: false })
       .order("kickoff_at", { nullsFirst: false });
 
