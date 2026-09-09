@@ -16,6 +16,7 @@ import {
   previewFixture,
 } from "@/features/competitions/fixture.functions";
 import { MatchCard } from "@/features/competitions/MatchCard";
+import { SchedulingTab } from "@/features/scheduling/SchedulingTab";
 import type { FixturePreview } from "@/features/competitions/types";
 import { listTeams } from "@/features/catalog/teams.functions";
 import { listPeople } from "@/features/catalog/people.functions";
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/admin/$orgSlug/competitions/$competitionI
   component: CompetitionDetail,
 });
 
-type Tab = "teams" | "fixture" | "ladder";
+type Tab = "teams" | "fixture" | "scheduling" | "ladder";
 
 function CompetitionDetail() {
   const { t } = useTranslation();
@@ -71,6 +72,7 @@ function CompetitionDetail() {
   const TABS: { key: Tab; label: string }[] = [
     { key: "teams", label: t("competitions.tabTeams") },
     { key: "fixture", label: t("competitions.tabFixture") },
+    { key: "scheduling", label: t("scheduling.tab") },
     { key: "ladder", label: t("competitions.tabLadder") },
   ];
 
@@ -134,6 +136,9 @@ function CompetitionDetail() {
           canEdit={canEdit}
           timeZone={timeZone}
         />
+      )}
+      {tab === "scheduling" && (
+        <SchedulingTab orgSlug={orgSlug} competitionId={competitionId} canEdit={canEdit} />
       )}
       {tab === "ladder" && (
         <LadderTab

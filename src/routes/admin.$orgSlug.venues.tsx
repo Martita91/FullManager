@@ -11,6 +11,8 @@ import {
   updateVenue,
 } from "@/features/catalog/venues.functions";
 import { ENTITY_STATUSES, type EntityStatus, type Venue } from "@/features/catalog/types";
+import { listAvailability } from "@/features/scheduling/scheduling.functions";
+import { PitchAvailability } from "@/features/scheduling/PitchAvailability";
 import { useOrgMembership } from "@/features/organizations/useOrgMembership";
 import { CatalogPage } from "@/components/CatalogPage";
 import {
@@ -226,6 +228,13 @@ function VenueCard({
   const [pitchName, setPitchName] = useState("");
   const [surface, setSurface] = useState("");
 
+  // Shared query key, so every venue card on the page reads one fetch rather
+  // than one per card.
+  const { data: availability } = useQuery({
+    queryKey: ["availability", orgSlug],
+    queryFn: () => listAvailability({ data: { orgSlug } }),
+  });
+
   const addPitch = useMutation({
     mutationFn: () =>
       createPitch({
@@ -279,23 +288,31 @@ function VenueCard({
         {venue.pitches.length > 0 ? (
           <ul className="mt-2 space-y-1">
             {venue.pitches.map((pitch) => (
-              <li key={pitch.id} className="flex items-center justify-between gap-3 text-sm">
-                <span>
-                  {pitch.name}
-                  {pitch.surface ? ` · ${pitch.surface}` : ""}
-                </span>
-                {canEdit && (
-                  <Button
-                    variant="ghost"
-                    className="text-destructive"
-                    disabled={dropPitch.isPending}
-                    onClick={() => {
-                      if (confirm(t("common.confirmDelete"))) dropPitch.mutate(pitch.id);
-                    }}
-                  >
-                    {t("common.remove")}
-                  </Button>
-                )}
+              <li key={pitch.id} className="text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span>
+                    {pitch.name}
+                    {pitch.surface ? ` · ${pitch.surface}` : ""}
+                  </span>
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      className="text-destructive"
+                      disabled={dropPitch.isPending}
+                      onClick={() => {
+                        if (confirm(t("common.confirmDelete"))) dropPitch.mutate(pitch.id);
+                      }}
+                    >
+                      {t("common.remove")}
+                    </Button>
+                  )}
+                </div>
+                <PitchAvailability
+                  orgSlug={orgSlug}
+                  pitchId={pitch.id}
+                  windows={(availability ?? []).filter((w) => w.pitchId === pitch.id)}
+                  canEdit={canEdit}
+                />
               </li>
             ))}
           </ul>
