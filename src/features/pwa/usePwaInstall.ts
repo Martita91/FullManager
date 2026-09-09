@@ -21,12 +21,8 @@ export function usePwaInstall() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    if ("serviceWorker" in navigator) {
-      // Failure here is not worth surfacing: the app works fine without it,
-      // it just can't be installed.
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
-    }
-
+    // Registration lives at the root (see ServiceWorker), so the public site
+    // is installable too. This hook only deals with the prompt.
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       // iOS reports installed state on navigator, not via display-mode.

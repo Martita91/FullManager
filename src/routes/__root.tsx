@@ -2,6 +2,7 @@ import { createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/reac
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { useTranslation } from "react-i18next";
+import { ServiceWorker } from "@/features/pwa/ServiceWorker";
 import type { RouterContext } from "@/router";
 import { branding } from "@/lib/branding";
 import appCss from "@/styles.css?url";
@@ -47,6 +48,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <QueryClientProvider client={queryClient}>
           {children}
+          <ServiceWorker />
           <Toaster richColors position="top-center" />
         </QueryClientProvider>
         <Scripts />
