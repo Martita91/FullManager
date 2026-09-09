@@ -1,28 +1,48 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { getPublicCompetition } from "@/features/public/public.functions";
 import { computeStandings } from "@/lib/standings/table";
 import { formatKickoff } from "@/lib/time/zoned";
+import { branding } from "@/lib/branding";
+import { competitionDescription, seoMeta } from "@/lib/seo";
 import { Shell } from "./$orgSlug.index";
 import { EmptyState, TableWrap, Td, Th } from "@/components/ui/controls";
 
 export const Route = createFileRoute("/$orgSlug/c/$competitionId")({
+  loader: ({ params }) => getPublicCompetition({ data: { competitionId: params.competitionId } }),
+  head: ({ loaderData, params }) => {
+    if (!loaderData) return { meta: [{ title: branding.productName }] };
+
+    // The leader is worth naming: it is the one fact that makes someone open a
+    // ladder link, and it costs nothing to compute here.
+    const table = computeStandings(loaderData.teams, loaderData.matches, loaderData.points);
+    const played = loaderData.matches.filter(
+      (m) => m.status === "played" || m.status === "forfeit",
+    ).length;
+
+    return {
+      meta: seoMeta({
+        title: `${loaderData.name} — ${loaderData.organization.name}`,
+        description: competitionDescription({
+          seasonName: loaderData.seasonName,
+          divisionName: loaderData.divisionName,
+          teamCount: loaderData.teams.length,
+          playedCount: played,
+          leaderName: played > 0 ? (table[0]?.teamName ?? null) : null,
+        }),
+        path: `/${params.orgSlug}/c/${params.competitionId}`,
+      }),
+    };
+  },
   component: PublicCompetitionPage,
 });
 
 function PublicCompetitionPage() {
   const { t } = useTranslation();
-  const { orgSlug, competitionId } = Route.useParams();
+  const { orgSlug } = Route.useParams();
+  const data = Route.useLoaderData();
 
-  const competition = useQuery({
-    queryKey: ["public-competition", competitionId],
-    queryFn: () => getPublicCompetition({ data: { competitionId } }),
-  });
-
-  if (competition.isPending) return <Shell title={t("common.loading")}>{null}</Shell>;
-
-  if (!competition.data) {
+  if (!data) {
     return (
       <Shell title={t("errors.notFoundTitle")}>
         <p className="text-muted-foreground text-sm">{t("errors.notFoundBody")}</p>
@@ -30,7 +50,6 @@ function PublicCompetitionPage() {
     );
   }
 
-  const data = competition.data;
   const timeZone = data.organization.timezone;
   const table = computeStandings(data.teams, data.matches, data.points);
 
@@ -47,7 +66,9 @@ function PublicCompetitionPage() {
       </p>
 
       <section className="mb-10">
-        <h2 className="mb-3 text-sm font-semibold">{t("publicSite.ladderTitle")}</h2>
+        <h2 className="label-caps text-muted-foreground mb-3 text-[0.68rem]">
+          {t("publicSite.ladderTitle")}
+        </h2>
         <TableWrap>
           <thead>
             <tr>
@@ -81,13 +102,15 @@ function PublicCompetitionPage() {
       </section>
 
       <section className="mb-10">
-        <h2 className="mb-3 text-sm font-semibold">{t("publicSite.upcoming")}</h2>
+        <h2 className="label-caps text-muted-foreground mb-3 text-[0.68rem]">
+          {t("publicSite.upcoming")}
+        </h2>
         {upcoming.length > 0 ? (
           <ul className="space-y-2">
             {upcoming.map((match) => (
               <li
                 key={match.id}
-                className="border-border flex flex-wrap items-baseline justify-between gap-2 rounded-lg border px-4 py-3 text-sm"
+                className="border-border bg-card flex flex-wrap items-baseline justify-between gap-2 rounded-lg border px-4 py-3 text-sm"
               >
                 <span className="font-medium">
                   {match.homeTeamName} v {match.awayTeamName}
@@ -106,16 +129,19 @@ function PublicCompetitionPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold">{t("publicSite.results")}</h2>
+        <h2 className="label-caps text-muted-foreground mb-3 text-[0.68rem]">
+          {t("publicSite.results")}
+        </h2>
         {results.length > 0 ? (
           <ul className="space-y-2">
             {results.map((match) => (
               <li
                 key={match.id}
-                className="border-border flex flex-wrap items-baseline justify-between gap-2 rounded-lg border px-4 py-3 text-sm"
+                className="border-border bg-card flex flex-wrap items-baseline justify-between gap-2 rounded-lg border px-4 py-3 text-sm"
               >
                 <span className="font-medium">
-                  {match.homeTeamName} {match.homeScore} – {match.awayScore} {match.awayTeamName}
+                  {match.homeTeamName} <span className="num">{match.homeScore}</span> –{" "}
+                  <span className="num">{match.awayScore}</span> {match.awayTeamName}
                 </span>
                 <span className="text-muted-foreground">
                   {t("publicSite.round")} {match.round ?? "—"}

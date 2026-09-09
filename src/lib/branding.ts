@@ -11,8 +11,12 @@ export const branding = {
   productName: "Full Manager",
   /** Used where a compact mark is needed (nav, favicon text, small screens). */
   shortName: "FM",
-  /** Public marketing/site origin. Empty until a domain is registered. */
-  siteUrl: "",
+  /**
+   * Public origin, with no trailing slash. Link previews and canonical URLs
+   * have to be absolute — a scraper has no page to resolve a relative one
+   * against — so this needs updating if the domain changes.
+   */
+  siteUrl: "https://full-manager-nine.vercel.app",
   /** Where support mail goes. Empty until a mailbox exists. */
   supportEmail: "",
 } as const;
