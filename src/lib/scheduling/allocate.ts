@@ -180,6 +180,14 @@ export interface AllocateOptions {
   toDate: string;
   windows: readonly AvailabilityWindow[];
   preferences: readonly TimePreference[];
+  /**
+   * Matches in this competition that already have a date and are not being
+   * moved. They are not just obstacles to avoid — they anchor the calendar.
+   * Without them, auto-scheduling the rest of a season after someone placed
+   * round 3 by hand happily puts rounds 4 to 6 a month *earlier*: each is a
+   * valid arrangement and the sequence is nonsense.
+   */
+  alreadyScheduled?: readonly { round: number; date: string }[];
 }
 
 /**
@@ -227,6 +235,20 @@ export function allocateFixture(
     const remaining = matches.filter((m) => m.round === round);
     // Teams already playing on a given date, for this round's placement.
     const playingOn = new Map<string, Set<string>>();
+
+    // An earlier round already sitting on the calendar sets a floor for this
+    // one, so a hand-placed round 3 cannot end up after an auto-placed round 4.
+    const floor = (options.alreadyScheduled ?? [])
+      .filter((m) => m.round < round)
+      .reduce<string | null>(
+        (latest, m) => (latest === null || m.date > latest ? m.date : latest),
+        null,
+      );
+
+    if (floor) {
+      while (dateCursor < dates.length && toUtc(dates[dateCursor]!) <= toUtc(floor)) dateCursor++;
+    }
+
     let lastDateIndex = dateCursor - 1;
 
     for (let index = dateCursor; index < dates.length && remaining.length > 0; index++) {

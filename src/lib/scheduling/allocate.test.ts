@@ -197,6 +197,32 @@ describe("allocateFixture", () => {
     expect(new Set(result.assignments.map((a) => a.pitchId))).toEqual(new Set(["p1", "p2"]));
   });
 
+  it("never places a round before an earlier one already on the calendar", () => {
+    // Round 3 was put on the calendar by hand, a month out. Rounds 4 and 5 must
+    // land after it, not in the gap before it.
+    const result = allocateFixture([match("m4", 4, "a", "b"), match("m5", 5, "a", "b")], {
+      ...base,
+      fromDate: "2026-09-01",
+      alreadyScheduled: [{ round: 3, date: "2026-10-10" }],
+    });
+
+    expect(result.unassigned).toEqual([]);
+    for (const assignment of result.assignments) {
+      expect(assignment.date > "2026-10-10").toBe(true);
+    }
+  });
+
+  it("ignores a later round that is already placed", () => {
+    // A hand-placed final shouldn't push the whole season past it.
+    const result = allocateFixture([match("m1", 1, "a", "b")], {
+      ...base,
+      fromDate: "2026-09-01",
+      alreadyScheduled: [{ round: 9, date: "2026-12-19" }],
+    });
+
+    expect(result.assignments[0]!.date).toBe("2026-09-05");
+  });
+
   it("copes with no availability at all", () => {
     const result = allocateFixture([match("m1", 1, "a", "b")], { ...base, windows: [] });
     expect(result.assignments).toEqual([]);

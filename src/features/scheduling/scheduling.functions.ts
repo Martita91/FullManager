@@ -8,7 +8,7 @@ import {
   type AvailabilityWindow,
   type TimePreference,
 } from "@/lib/scheduling/allocate";
-import { zonedInputToIso } from "@/lib/time/zoned";
+import { isoToZonedInput, zonedInputToIso } from "@/lib/time/zoned";
 
 const TIME = z.string().regex(/^\d{2}:\d{2}$/, "Expected HH:MM");
 const DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
@@ -300,6 +300,15 @@ async function buildAllocation(
     .not("pitch_id", "is", null);
   if (bookedError) throw new Error(bookedError.message);
 
+  // Matches in THIS competition that already have a date. They anchor the
+  // round order, so an auto-placed round 4 lands after a hand-placed round 3.
+  const { data: anchorRows, error: anchorError } = await supabase
+    .from("matches")
+    .select("round_number, kickoff_at")
+    .eq("competition_id", input.competitionId)
+    .not("kickoff_at", "is", null);
+  if (anchorError) throw new Error(anchorError.message);
+
   type MatchRecord = {
     id: string;
     round_number: number | null;
@@ -329,6 +338,20 @@ async function buildAllocation(
       { pitch: w.pitches?.name ?? "", venue: w.pitches?.venues?.name ?? "" },
     ]),
   );
+
+  const timeZone = (org as { timezone: string }).timezone;
+
+  const alreadyScheduled = (
+    (anchorRows ?? []) as { round_number: number | null; kickoff_at: string }[]
+  )
+    .filter((row) => row.round_number !== null)
+    .map((row) => ({
+      round: row.round_number!,
+      // The allocator reasons in the league's local calendar, so an instant has
+      // to be read back as the date the league would call it.
+      date: isoToZonedInput(row.kickoff_at, timeZone).slice(0, 10),
+    }))
+    .filter((row) => row.date !== "");
 
   const allocation = allocateFixture(
     matches.map((m) => ({
@@ -362,10 +385,9 @@ async function buildAllocation(
         endsAt: p.ends_at ? shortTime(p.ends_at) : null,
         kind: p.kind,
       })),
+      alreadyScheduled,
     },
   );
-
-  const timeZone = (org as { timezone: string }).timezone;
 
   // Drop any assignment that lands on a pitch and instant already committed to
   // another match, anywhere in the league.
