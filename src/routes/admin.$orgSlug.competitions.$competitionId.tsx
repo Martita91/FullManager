@@ -17,6 +17,7 @@ import {
 } from "@/features/competitions/fixture.functions";
 import { MatchCard } from "@/features/competitions/MatchCard";
 import { SchedulingTab } from "@/features/scheduling/SchedulingTab";
+import { FinalsTab } from "@/features/finals/FinalsTab";
 import type { FixturePreview } from "@/features/competitions/types";
 import { listTeams } from "@/features/catalog/teams.functions";
 import { listPeople } from "@/features/catalog/people.functions";
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/admin/$orgSlug/competitions/$competitionI
   component: CompetitionDetail,
 });
 
-type Tab = "teams" | "fixture" | "scheduling" | "ladder";
+type Tab = "teams" | "fixture" | "scheduling" | "ladder" | "finals";
 
 function CompetitionDetail() {
   const { t } = useTranslation();
@@ -74,6 +75,7 @@ function CompetitionDetail() {
     { key: "fixture", label: t("competitions.tabFixture") },
     { key: "scheduling", label: t("scheduling.tab") },
     { key: "ladder", label: t("competitions.tabLadder") },
+    { key: "finals", label: t("finals.tab") },
   ];
 
   return (
@@ -149,6 +151,14 @@ function CompetitionDetail() {
             draw: competition.data.pointsDraw,
             loss: competition.data.pointsLoss,
           }}
+        />
+      )}
+      {tab === "finals" && (
+        <FinalsTab
+          orgSlug={orgSlug}
+          competitionId={competitionId}
+          canEdit={canEdit}
+          timeZone={timeZone}
         />
       )}
     </CatalogPage>
