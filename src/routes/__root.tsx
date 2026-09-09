@@ -1,4 +1,5 @@
 import { createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { useTranslation } from "react-i18next";
 import type { RouterContext } from "@/router";
@@ -20,14 +21,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // The router's context and React Query's context are separate things: putting
+  // the QueryClient in the router context makes it reachable from loaders, but
+  // useQuery reads React's own provider and nothing else. Without this wrapper
+  // every component that calls useQuery throws "No QueryClient set".
+  const { queryClient } = Route.useRouteContext();
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
-        <Toaster richColors position="top-center" />
+        <QueryClientProvider client={queryClient}>
+          {children}
+          <Toaster richColors position="top-center" />
+        </QueryClientProvider>
         <Scripts />
       </body>
     </html>

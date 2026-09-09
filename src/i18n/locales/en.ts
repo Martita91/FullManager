@@ -57,7 +57,7 @@ export const en = {
     notFoundTitle: "Page not found",
     notFoundBody: "The page you asked for doesn't exist.",
     genericTitle: "Something went wrong",
-    genericBody: "The error has been logged. Try again in a moment.",
+    genericBody: "Something on this page failed to load. Try again in a moment.",
     forbiddenTitle: "No access",
     forbiddenBody: "Your account isn't a member of this organization.",
   },
