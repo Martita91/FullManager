@@ -298,6 +298,9 @@ export const en = {
     drawnNeedsWinner: "Level after full time. Record who went through.",
     wentThrough: "Went through",
     onScore: "Decided on the score",
+    clear: "Clear the finals",
+    clearConfirm: "Delete the whole finals series? Only possible while nothing is played.",
+    hasResults: "Some finals matches already have results, so the bracket can't be cleared.",
   },
   weekdays: {
     "0": "Sunday",

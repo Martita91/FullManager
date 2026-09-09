@@ -236,11 +236,35 @@ export const generateFinals = createServerFn({ method: "POST" })
     ).map((r) => ({ id: r.team_id, name: r.teams?.name ?? "" }));
 
     const points = competition as { points_win: number; points_draw: number; points_loss: number };
+
+    // Map the columns explicitly. Handing the raw rows to computeStandings and
+    // silencing the mismatch with a cast is how this shipped seeded
+    // alphabetically: every snake_case field read as undefined, so no match
+    // counted, every team finished on zero, and the last tiebreaker — team name
+    // — decided the entire bracket.
     const table = computeStandings(
       teams,
-      (leagueMatches ?? []) as unknown as Parameters<typeof computeStandings>[1],
+      (
+        (leagueMatches ?? []) as {
+          home_team_id: string | null;
+          away_team_id: string | null;
+          home_score: number | null;
+          away_score: number | null;
+          status: string;
+        }[]
+      ).map((m) => ({
+        homeTeamId: m.home_team_id,
+        awayTeamId: m.away_team_id,
+        homeScore: m.home_score,
+        awayScore: m.away_score,
+        status: m.status,
+      })),
       { win: points.points_win, draw: points.points_draw, loss: points.points_loss },
     );
+
+    // A bracket seeded off an empty ladder is meaningless, and the failure is
+    // invisible once the rows exist. Refuse instead.
+    if (table.every((row) => row.played === 0)) throw new Error("NO_RESULTS");
 
     // Seeding is the ladder, so the bracket is only as meaningful as the league
     // phase that produced it — which is the point of finishing top.
@@ -290,6 +314,34 @@ export const generateFinals = createServerFn({ method: "POST" })
     }
 
     return { created: bracket.length };
+  });
+
+/** Throw the bracket away, so it can be drawn again. */
+export const clearFinals = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: unknown) => z.object({ orgSlug, competitionId: uuid }).parse(input))
+  .handler(async ({ data, context }): Promise<{ cleared: number }> => {
+    await requireOrgEditor(context.supabase, context.userId, data.orgSlug);
+
+    const records = await loadFinals(context.supabase, data.competitionId);
+    if (records.some((r) => r.status === "played" || r.status === "forfeit")) {
+      throw new Error("HAS_RESULTS");
+    }
+
+    // Later rounds first: a match cannot be deleted while another still points
+    // at it as its source.
+    const ordered = [...records].sort(
+      (a, b) =>
+        ["quarter_final", "semi_final", "third_place", "final"].indexOf(b.stage) -
+        ["quarter_final", "semi_final", "third_place", "final"].indexOf(a.stage),
+    );
+
+    for (const record of ordered) {
+      const { error } = await context.supabase.from("matches").delete().eq("id", record.id);
+      if (error) throw new Error(error.message);
+    }
+
+    return { cleared: records.length };
   });
 
 /** Move whoever has qualified into the next round. */

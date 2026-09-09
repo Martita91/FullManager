@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   generateFinals,
   getFinals,
+  clearFinals,
   resolveFinals,
   setMatchWinner,
   type FinalsMatch,
@@ -59,6 +60,11 @@ export function FinalsTab({
     },
   });
 
+  const clear = useMutation({
+    mutationFn: () => clearFinals({ data: { orgSlug, competitionId } }),
+    onSuccess: invalidate,
+  });
+
   const advance = useMutation({
     mutationFn: () => resolveFinals({ data: { orgSlug, competitionId } }),
     onSuccess: async (result) => {
@@ -68,14 +74,18 @@ export function FinalsTab({
   });
 
   const errorOf = (e: unknown) => (e instanceof Error ? e.message : null);
-  const message = errorOf(draw.error) ?? errorOf(advance.error);
+  const message = errorOf(draw.error) ?? errorOf(advance.error) ?? errorOf(clear.error);
   const actionError = message?.includes("ALREADY_HAS_FINALS")
     ? t("finals.alreadyHas")
     : message?.includes("NOT_ENOUGH_TEAMS")
       ? t("finals.notEnoughTeams")
-      : message
-        ? t("common.saveFailed")
-        : null;
+      : message?.includes("NO_RESULTS")
+        ? t("finals.needsResults")
+        : message?.includes("HAS_RESULTS")
+          ? t("finals.hasResults")
+          : message
+            ? t("common.saveFailed")
+            : null;
 
   const matches = finals.data?.matches ?? [];
   const hasBracket = matches.length > 0;
@@ -125,6 +135,15 @@ export function FinalsTab({
               onClick={() => advance.mutate()}
             >
               {t("finals.resolve")}
+            </Button>
+            <Button
+              variant="danger"
+              disabled={clear.isPending}
+              onClick={() => {
+                if (confirm(t("finals.clearConfirm"))) clear.mutate();
+              }}
+            >
+              {t("finals.clear")}
             </Button>
             {resolved !== null && (
               <span className="text-muted-foreground text-sm">
