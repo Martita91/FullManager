@@ -38,8 +38,8 @@ describe("findClashes", () => {
       match({ id: "m2", homeTeamId: "a", awayTeamId: "c", pitchId: "p2", round: 2 }),
     ]);
     const team = clashes.find((c) => c.kind === "team");
-    expect(team).toBeDefined();
-    expect(team!.kind === "team" && team.teamId).toBe("a");
+    expect(team?.kind).toBe("team");
+    expect(team?.kind === "team" ? team.teamId : null).toBe("a");
   });
 
   it("catches a team drawn twice in the same round", () => {
@@ -48,8 +48,8 @@ describe("findClashes", () => {
       match({ id: "m2", homeTeamId: "a", awayTeamId: "c", kickoffAt: LATER, pitchId: "p2" }),
     ]);
     const round = clashes.find((c) => c.kind === "round");
-    expect(round).toBeDefined();
-    expect(round!.kind === "round" && round.round).toBe(1);
+    expect(round?.kind).toBe("round");
+    expect(round?.kind === "round" ? round.round : null).toBe(1);
   });
 
   it("leaves unscheduled matches alone", () => {

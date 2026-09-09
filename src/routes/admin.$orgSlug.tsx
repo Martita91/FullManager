@@ -9,6 +9,7 @@ export const Route = createFileRoute("/admin/$orgSlug")({
 // Overview matches exactly, or it would stay highlighted on every child route.
 const SECTIONS = [
   { to: "/admin/$orgSlug", label: "nav.overview", exact: true },
+  { to: "/admin/$orgSlug/competitions", label: "nav.competitions", exact: false },
   { to: "/admin/$orgSlug/seasons", label: "nav.seasons", exact: false },
   { to: "/admin/$orgSlug/divisions", label: "nav.divisions", exact: false },
   { to: "/admin/$orgSlug/teams", label: "nav.teams", exact: false },

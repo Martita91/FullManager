@@ -21,6 +21,8 @@ import { Route as AdminOrgSlugDivisionsRouteImport } from './routes/admin.$orgSl
 import { Route as AdminOrgSlugPeopleRouteImport } from './routes/admin.$orgSlug.people'
 import { Route as AdminOrgSlugSeasonsRouteImport } from './routes/admin.$orgSlug.seasons'
 import { Route as AdminOrgSlugVenuesRouteImport } from './routes/admin.$orgSlug.venues'
+import { Route as AdminOrgSlugCompetitionsIndexRouteImport } from './routes/admin.$orgSlug.competitions.index'
+import { Route as AdminOrgSlugCompetitionsCompetitionIdRouteImport } from './routes/admin.$orgSlug.competitions.$competitionId'
 import { Route as AdminOrgSlugTeamsIndexRouteImport } from './routes/admin.$orgSlug.teams.index'
 import { Route as AdminOrgSlugTeamsTeamIdRouteImport } from './routes/admin.$orgSlug.teams.$teamId'
 
@@ -84,6 +86,18 @@ const AdminOrgSlugVenuesRoute = AdminOrgSlugVenuesRouteImport.update({
   path: '/venues',
   getParentRoute: () => AdminOrgSlugRoute,
 } as any)
+const AdminOrgSlugCompetitionsIndexRoute =
+  AdminOrgSlugCompetitionsIndexRouteImport.update({
+    id: '/competitions/',
+    path: '/competitions/',
+    getParentRoute: () => AdminOrgSlugRoute,
+  } as any)
+const AdminOrgSlugCompetitionsCompetitionIdRoute =
+  AdminOrgSlugCompetitionsCompetitionIdRouteImport.update({
+    id: '/competitions/$competitionId',
+    path: '/competitions/$competitionId',
+    getParentRoute: () => AdminOrgSlugRoute,
+  } as any)
 const AdminOrgSlugTeamsIndexRoute = AdminOrgSlugTeamsIndexRouteImport.update({
   id: '/teams/',
   path: '/teams/',
@@ -108,7 +122,9 @@ export interface FileRoutesByFullPath {
   '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
   '/admin/$orgSlug/venues': typeof AdminOrgSlugVenuesRoute
   '/admin/$orgSlug/': typeof AdminOrgSlugIndexRoute
+  '/admin/$orgSlug/competitions/$competitionId': typeof AdminOrgSlugCompetitionsCompetitionIdRoute
   '/admin/$orgSlug/teams/$teamId': typeof AdminOrgSlugTeamsTeamIdRoute
+  '/admin/$orgSlug/competitions/': typeof AdminOrgSlugCompetitionsIndexRoute
   '/admin/$orgSlug/teams/': typeof AdminOrgSlugTeamsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -122,7 +138,9 @@ export interface FileRoutesByTo {
   '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
   '/admin/$orgSlug/venues': typeof AdminOrgSlugVenuesRoute
   '/admin/$orgSlug': typeof AdminOrgSlugIndexRoute
+  '/admin/$orgSlug/competitions/$competitionId': typeof AdminOrgSlugCompetitionsCompetitionIdRoute
   '/admin/$orgSlug/teams/$teamId': typeof AdminOrgSlugTeamsTeamIdRoute
+  '/admin/$orgSlug/competitions': typeof AdminOrgSlugCompetitionsIndexRoute
   '/admin/$orgSlug/teams': typeof AdminOrgSlugTeamsIndexRoute
 }
 export interface FileRoutesById {
@@ -139,7 +157,9 @@ export interface FileRoutesById {
   '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
   '/admin/$orgSlug/venues': typeof AdminOrgSlugVenuesRoute
   '/admin/$orgSlug/': typeof AdminOrgSlugIndexRoute
+  '/admin/$orgSlug/competitions/$competitionId': typeof AdminOrgSlugCompetitionsCompetitionIdRoute
   '/admin/$orgSlug/teams/$teamId': typeof AdminOrgSlugTeamsTeamIdRoute
+  '/admin/$orgSlug/competitions/': typeof AdminOrgSlugCompetitionsIndexRoute
   '/admin/$orgSlug/teams/': typeof AdminOrgSlugTeamsIndexRoute
 }
 export interface FileRouteTypes {
@@ -157,7 +177,9 @@ export interface FileRouteTypes {
     | '/admin/$orgSlug/seasons'
     | '/admin/$orgSlug/venues'
     | '/admin/$orgSlug/'
+    | '/admin/$orgSlug/competitions/$competitionId'
     | '/admin/$orgSlug/teams/$teamId'
+    | '/admin/$orgSlug/competitions/'
     | '/admin/$orgSlug/teams/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -171,7 +193,9 @@ export interface FileRouteTypes {
     | '/admin/$orgSlug/seasons'
     | '/admin/$orgSlug/venues'
     | '/admin/$orgSlug'
+    | '/admin/$orgSlug/competitions/$competitionId'
     | '/admin/$orgSlug/teams/$teamId'
+    | '/admin/$orgSlug/competitions'
     | '/admin/$orgSlug/teams'
   id:
     | '__root__'
@@ -187,7 +211,9 @@ export interface FileRouteTypes {
     | '/admin/$orgSlug/seasons'
     | '/admin/$orgSlug/venues'
     | '/admin/$orgSlug/'
+    | '/admin/$orgSlug/competitions/$competitionId'
     | '/admin/$orgSlug/teams/$teamId'
+    | '/admin/$orgSlug/competitions/'
     | '/admin/$orgSlug/teams/'
   fileRoutesById: FileRoutesById
 }
@@ -284,6 +310,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrgSlugVenuesRouteImport
       parentRoute: typeof AdminOrgSlugRoute
     }
+    '/admin/$orgSlug/competitions/': {
+      id: '/admin/$orgSlug/competitions/'
+      path: '/competitions'
+      fullPath: '/admin/$orgSlug/competitions/'
+      preLoaderRoute: typeof AdminOrgSlugCompetitionsIndexRouteImport
+      parentRoute: typeof AdminOrgSlugRoute
+    }
+    '/admin/$orgSlug/competitions/$competitionId': {
+      id: '/admin/$orgSlug/competitions/$competitionId'
+      path: '/competitions/$competitionId'
+      fullPath: '/admin/$orgSlug/competitions/$competitionId'
+      preLoaderRoute: typeof AdminOrgSlugCompetitionsCompetitionIdRouteImport
+      parentRoute: typeof AdminOrgSlugRoute
+    }
     '/admin/$orgSlug/teams/': {
       id: '/admin/$orgSlug/teams/'
       path: '/teams'
@@ -307,7 +347,9 @@ interface AdminOrgSlugRouteChildren {
   AdminOrgSlugSeasonsRoute: typeof AdminOrgSlugSeasonsRoute
   AdminOrgSlugVenuesRoute: typeof AdminOrgSlugVenuesRoute
   AdminOrgSlugIndexRoute: typeof AdminOrgSlugIndexRoute
+  AdminOrgSlugCompetitionsCompetitionIdRoute: typeof AdminOrgSlugCompetitionsCompetitionIdRoute
   AdminOrgSlugTeamsTeamIdRoute: typeof AdminOrgSlugTeamsTeamIdRoute
+  AdminOrgSlugCompetitionsIndexRoute: typeof AdminOrgSlugCompetitionsIndexRoute
   AdminOrgSlugTeamsIndexRoute: typeof AdminOrgSlugTeamsIndexRoute
 }
 
@@ -317,7 +359,10 @@ const AdminOrgSlugRouteChildren: AdminOrgSlugRouteChildren = {
   AdminOrgSlugSeasonsRoute: AdminOrgSlugSeasonsRoute,
   AdminOrgSlugVenuesRoute: AdminOrgSlugVenuesRoute,
   AdminOrgSlugIndexRoute: AdminOrgSlugIndexRoute,
+  AdminOrgSlugCompetitionsCompetitionIdRoute:
+    AdminOrgSlugCompetitionsCompetitionIdRoute,
   AdminOrgSlugTeamsTeamIdRoute: AdminOrgSlugTeamsTeamIdRoute,
+  AdminOrgSlugCompetitionsIndexRoute: AdminOrgSlugCompetitionsIndexRoute,
   AdminOrgSlugTeamsIndexRoute: AdminOrgSlugTeamsIndexRoute,
 }
 
