@@ -136,10 +136,16 @@ as $fn$
 declare
   remaining int;
 begin
+  -- NEW is unassigned in a DELETE trigger and referencing it raises, so every
+  -- branch below decides what to return from TG_OP rather than from NEW.
   if old.role <> 'owner' then
-    return coalesce(new, old);
+    if tg_op = 'DELETE' then
+      return old;
+    end if;
+    return new;
   end if;
 
+  -- Still an owner after the update: nothing is being given up.
   if tg_op = 'UPDATE' and new.role = 'owner' then
     return new;
   end if;
@@ -155,7 +161,10 @@ begin
       using errcode = 'check_violation';
   end if;
 
-  return coalesce(new, old);
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
 end;
 $fn$;
 
