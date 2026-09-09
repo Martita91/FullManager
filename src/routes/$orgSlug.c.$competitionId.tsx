@@ -64,14 +64,16 @@ function PublicCompetitionPage() {
           <tbody>
             {table.map((row) => (
               <tr key={row.teamId}>
-                <Td>{row.position}</Td>
+                <Td className="num text-muted-foreground">{row.position}</Td>
                 <Td className="font-medium">{row.teamName}</Td>
-                <Td>{row.played}</Td>
-                <Td>{row.won}</Td>
-                <Td>{row.drawn}</Td>
-                <Td>{row.lost}</Td>
-                <Td>{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</Td>
-                <Td className="font-medium">{row.points}</Td>
+                <Td className="num">{row.played}</Td>
+                <Td className="num">{row.won}</Td>
+                <Td className="num">{row.drawn}</Td>
+                <Td className="num">{row.lost}</Td>
+                <Td className="num">
+                  {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
+                </Td>
+                <Td className="num text-base">{row.points}</Td>
               </tr>
             ))}
           </tbody>

@@ -106,7 +106,7 @@ export function Th({ children, className }: { children?: React.ReactNode; classN
   return (
     <th
       className={cn(
-        "text-muted-foreground border-border border-b px-4 py-2.5 text-left text-xs font-medium tracking-wide uppercase",
+        "label-caps text-muted-foreground border-border border-b px-4 py-2.5 text-left text-[0.68rem]",
         className,
       )}
     >

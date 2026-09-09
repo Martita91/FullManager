@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Full Manager">
-  <rect width="512" height="512" rx="96" fill="#111827" />
-  <circle cx="256" cy="256" r="132" fill="none" stroke="#ffffff" stroke-width="26" />
-  <path d="M256 148 L332 203 L303 292 L209 292 L180 203 Z" fill="#ffffff" />
-  <path d="M256 124 L256 148 M164 214 L180 203 M348 214 L332 203 M212 372 L209 292 M300 372 L303 292"
-        stroke="#ffffff" stroke-width="18" stroke-linecap="round" />
+  <!-- Forest green field, amber ball — the same two colours the app runs on. -->
+  <rect width="512" height="512" rx="96" fill="#1f4d40" />
+  <circle cx="256" cy="256" r="130" fill="none" stroke="#f0b429" stroke-width="24" />
+  <path d="M256 152 L331 206 L302 294 L210 294 L181 206 Z" fill="#f0b429" />
+  <path d="M256 126 L256 152 M162 218 L181 206 M350 218 L331 206 M214 376 L210 294 M298 376 L302 294"
+        stroke="#f0b429" stroke-width="17" stroke-linecap="round" />
 </svg>

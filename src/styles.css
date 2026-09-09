@@ -1,54 +1,32 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-}
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-}
+/*
+ * Look and feel carried over from Thursday F.C.: warm paper rather than flat
+ * white, forest green, amber, and a condensed face for anything that behaves
+ * like a label or a number. It reads like a printed team sheet, which is the
+ * point.
+ *
+ * Light only, as in the original. Committing to one palette and painting every
+ * surface explicitly beats a half-considered dark variant that nobody checked.
+ */
 
 @theme inline {
+  --font-heading: "Oswald", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Archivo", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -62,28 +40,97 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-muted: var(--gold-muted);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-hairline: var(--hairline);
+}
+
+:root {
+  color-scheme: light;
+  --radius: 1rem;
+
+  /* Warm off-white page */
+  --background: oklch(0.928 0.011 89.7);
+  --foreground: oklch(0.181 0.006 55.9);
+
+  --card: oklch(0.985 0.006 89.7);
+  --card-foreground: oklch(0.181 0.006 55.9);
+
+  --popover: oklch(0.985 0.006 89.7);
+  --popover-foreground: oklch(0.181 0.006 55.9);
+
+  /* Forest green */
+  --primary: oklch(0.381 0.06 170.5);
+  --primary-foreground: oklch(0.965 0.02 120);
+
+  --secondary: oklch(0.9 0.012 89.7);
+  --secondary-foreground: oklch(0.181 0.006 55.9);
+
+  --muted: oklch(0.9 0.012 89.7);
+  --muted-foreground: oklch(0.5 0.012 70);
+
+  --accent: oklch(0.844 0.172 84.9);
+  --accent-foreground: oklch(0.181 0.006 55.9);
+
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --border: oklch(0.86 0.012 89.7);
+  --input: oklch(0.86 0.012 89.7);
+  --ring: oklch(0.381 0.06 170.5);
+  --hairline: oklch(0.83 0.012 80 / 60%);
+
+  /* Amber / gold */
+  --gold: oklch(0.844 0.172 84.9);
+  --gold-foreground: oklch(0.181 0.006 55.9);
+  --gold-muted: oklch(0.635 0.12 89);
+
+  /* Near-black ink */
+  --ink: oklch(0.181 0.006 55.9);
+  --ink-foreground: oklch(0.94 0.008 89.7);
 }
 
 @layer base {
   * {
-    border-color: var(--border);
+    border-color: var(--color-border);
   }
 
+  html,
   body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family:
-      ui-sans-serif,
-      system-ui,
-      -apple-system,
-      "Segoe UI",
-      Roboto,
-      Helvetica,
-      Arial,
-      sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
   }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+}
+
+/** Small uppercase label — column headers, section eyebrows. */
+@utility label-caps {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 500;
+}
+
+/**
+ * Figures in the condensed face, with tabular numerals so a ladder's columns
+ * line up instead of shuffling as scores change.
+ */
+@utility num {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
