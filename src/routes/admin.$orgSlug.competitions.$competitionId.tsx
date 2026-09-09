@@ -91,6 +91,7 @@ function CompetitionDetail() {
         {TABS.map((entry) => (
           <button
             key={entry.key}
+            type="button"
             onClick={() => setTab(entry.key)}
             className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
               tab === entry.key

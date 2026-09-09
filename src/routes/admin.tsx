@@ -83,7 +83,11 @@ function AdminShell() {
           )}
         </div>
 
-        <button onClick={signOut} className="text-muted-foreground text-sm hover:underline">
+        <button
+          type="button"
+          onClick={signOut}
+          className="text-muted-foreground text-sm hover:underline"
+        >
           {t("common.signOut")}
         </button>
       </header>
