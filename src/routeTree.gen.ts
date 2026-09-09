@@ -12,10 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MeRouteImport } from './routes/me'
+import { Route as OrgSlugIndexRouteImport } from './routes/$orgSlug.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminOrgSlugRouteImport } from './routes/admin.$orgSlug'
 import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as OrgSlugCCompetitionIdRouteImport } from './routes/$orgSlug.c.$competitionId'
 import { Route as AdminOrgSlugIndexRouteImport } from './routes/admin.$orgSlug.index'
 import { Route as AdminOrgSlugDivisionsRouteImport } from './routes/admin.$orgSlug.divisions'
 import { Route as AdminOrgSlugPeopleRouteImport } from './routes/admin.$orgSlug.people'
@@ -41,6 +44,16 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgSlugIndexRoute = OrgSlugIndexRouteImport.update({
+  id: '/$orgSlug/',
+  path: '/$orgSlug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -59,6 +72,11 @@ const AdminNewRoute = AdminNewRouteImport.update({
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgSlugCCompetitionIdRoute = OrgSlugCCompetitionIdRouteImport.update({
+  id: '/$orgSlug/c/$competitionId',
+  path: '/$orgSlug/c/$competitionId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminOrgSlugIndexRoute = AdminOrgSlugIndexRouteImport.update({
@@ -113,10 +131,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/me': typeof MeRoute
   '/admin/$orgSlug': typeof AdminOrgSlugRouteWithChildren
   '/admin/new': typeof AdminNewRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/$orgSlug/': typeof OrgSlugIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/$orgSlug/c/$competitionId': typeof OrgSlugCCompetitionIdRoute
   '/admin/$orgSlug/divisions': typeof AdminOrgSlugDivisionsRoute
   '/admin/$orgSlug/people': typeof AdminOrgSlugPeopleRoute
   '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
@@ -130,9 +151,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/me': typeof MeRoute
   '/admin/new': typeof AdminNewRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/$orgSlug': typeof OrgSlugIndexRoute
   '/admin': typeof AdminIndexRoute
+  '/$orgSlug/c/$competitionId': typeof OrgSlugCCompetitionIdRoute
   '/admin/$orgSlug/divisions': typeof AdminOrgSlugDivisionsRoute
   '/admin/$orgSlug/people': typeof AdminOrgSlugPeopleRoute
   '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
@@ -148,10 +172,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/me': typeof MeRoute
   '/admin/$orgSlug': typeof AdminOrgSlugRouteWithChildren
   '/admin/new': typeof AdminNewRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/$orgSlug/': typeof OrgSlugIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/$orgSlug/c/$competitionId': typeof OrgSlugCCompetitionIdRoute
   '/admin/$orgSlug/divisions': typeof AdminOrgSlugDivisionsRoute
   '/admin/$orgSlug/people': typeof AdminOrgSlugPeopleRoute
   '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
@@ -168,10 +195,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/me'
     | '/admin/$orgSlug'
     | '/admin/new'
     | '/auth/callback'
+    | '/$orgSlug/'
     | '/admin/'
+    | '/$orgSlug/c/$competitionId'
     | '/admin/$orgSlug/divisions'
     | '/admin/$orgSlug/people'
     | '/admin/$orgSlug/seasons'
@@ -185,9 +215,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/me'
     | '/admin/new'
     | '/auth/callback'
+    | '/$orgSlug'
     | '/admin'
+    | '/$orgSlug/c/$competitionId'
     | '/admin/$orgSlug/divisions'
     | '/admin/$orgSlug/people'
     | '/admin/$orgSlug/seasons'
@@ -202,10 +235,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/me'
     | '/admin/$orgSlug'
     | '/admin/new'
     | '/auth/callback'
+    | '/$orgSlug/'
     | '/admin/'
+    | '/$orgSlug/c/$competitionId'
     | '/admin/$orgSlug/divisions'
     | '/admin/$orgSlug/people'
     | '/admin/$orgSlug/seasons'
@@ -221,7 +257,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MeRoute: typeof MeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  OrgSlugIndexRoute: typeof OrgSlugIndexRoute
+  OrgSlugCCompetitionIdRoute: typeof OrgSlugCCompetitionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -245,6 +284,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$orgSlug/': {
+      id: '/$orgSlug/'
+      path: '/$orgSlug'
+      fullPath: '/$orgSlug/'
+      preLoaderRoute: typeof OrgSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -273,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$orgSlug/c/$competitionId': {
+      id: '/$orgSlug/c/$competitionId'
+      path: '/$orgSlug/c/$competitionId'
+      fullPath: '/$orgSlug/c/$competitionId'
+      preLoaderRoute: typeof OrgSlugCCompetitionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/$orgSlug/': {
@@ -388,7 +448,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
+  MeRoute: MeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  OrgSlugIndexRoute: OrgSlugIndexRoute,
+  OrgSlugCCompetitionIdRoute: OrgSlugCCompetitionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

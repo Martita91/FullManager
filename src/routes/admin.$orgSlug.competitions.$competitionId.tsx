@@ -6,6 +6,7 @@ import {
   getCompetition,
   listRegistrations,
   registerTeam,
+  setCompetitionPublished,
   unregisterTeam,
 } from "@/features/competitions/competitions.functions";
 import {
@@ -78,13 +79,32 @@ function CompetitionDetail() {
       title={competition.data.name}
       subtitle={`${competition.data.seasonName} · ${competition.data.divisionName}`}
       action={
-        <Link
-          to="/admin/$orgSlug/competitions"
-          params={{ orgSlug }}
-          className="text-muted-foreground text-sm hover:underline"
-        >
-          {t("competitions.backToCompetitions")}
-        </Link>
+        <div className="flex items-center gap-3">
+          {canEdit && (
+            <PublishToggle
+              orgSlug={orgSlug}
+              competitionId={competitionId}
+              isPublished={competition.data.isPublished}
+            />
+          )}
+          {competition.data.isPublished && (
+            <Link
+              to="/$orgSlug/c/$competitionId"
+              params={{ orgSlug, competitionId }}
+              target="_blank"
+              className="text-sm underline"
+            >
+              {t("publicSite.fixtureTitle")}
+            </Link>
+          )}
+          <Link
+            to="/admin/$orgSlug/competitions"
+            params={{ orgSlug }}
+            className="text-muted-foreground text-sm hover:underline"
+          >
+            {t("competitions.backToCompetitions")}
+          </Link>
+        </div>
       }
     >
       <div className="border-border mb-6 flex gap-1 border-b">
@@ -127,6 +147,40 @@ function CompetitionDetail() {
         />
       )}
     </CatalogPage>
+  );
+}
+
+/**
+ * Publishing is the moment a competition stops being internal, so it is a
+ * deliberate toggle on the competition itself rather than a league-wide switch.
+ */
+function PublishToggle({
+  orgSlug,
+  competitionId,
+  isPublished,
+}: {
+  orgSlug: string;
+  competitionId: string;
+  isPublished: boolean;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const toggle = useMutation({
+    mutationFn: () =>
+      setCompetitionPublished({ data: { orgSlug, id: competitionId, isPublished: !isPublished } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["competition", competitionId] }),
+  });
+
+  return (
+    <Button
+      variant={isPublished ? "secondary" : "primary"}
+      disabled={toggle.isPending}
+      onClick={() => toggle.mutate()}
+      title={t("competitions.publishHelp")}
+    >
+      {isPublished ? t("competitions.unpublish") : t("competitions.publish")}
+    </Button>
   );
 }
 
