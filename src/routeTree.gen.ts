@@ -17,6 +17,12 @@ import { Route as AdminOrgSlugRouteImport } from './routes/admin.$orgSlug'
 import { Route as AdminNewRouteImport } from './routes/admin.new'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminOrgSlugIndexRouteImport } from './routes/admin.$orgSlug.index'
+import { Route as AdminOrgSlugDivisionsRouteImport } from './routes/admin.$orgSlug.divisions'
+import { Route as AdminOrgSlugPeopleRouteImport } from './routes/admin.$orgSlug.people'
+import { Route as AdminOrgSlugSeasonsRouteImport } from './routes/admin.$orgSlug.seasons'
+import { Route as AdminOrgSlugVenuesRouteImport } from './routes/admin.$orgSlug.venues'
+import { Route as AdminOrgSlugTeamsIndexRouteImport } from './routes/admin.$orgSlug.teams.index'
+import { Route as AdminOrgSlugTeamsTeamIdRouteImport } from './routes/admin.$orgSlug.teams.$teamId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +64,36 @@ const AdminOrgSlugIndexRoute = AdminOrgSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminOrgSlugRoute,
 } as any)
+const AdminOrgSlugDivisionsRoute = AdminOrgSlugDivisionsRouteImport.update({
+  id: '/divisions',
+  path: '/divisions',
+  getParentRoute: () => AdminOrgSlugRoute,
+} as any)
+const AdminOrgSlugPeopleRoute = AdminOrgSlugPeopleRouteImport.update({
+  id: '/people',
+  path: '/people',
+  getParentRoute: () => AdminOrgSlugRoute,
+} as any)
+const AdminOrgSlugSeasonsRoute = AdminOrgSlugSeasonsRouteImport.update({
+  id: '/seasons',
+  path: '/seasons',
+  getParentRoute: () => AdminOrgSlugRoute,
+} as any)
+const AdminOrgSlugVenuesRoute = AdminOrgSlugVenuesRouteImport.update({
+  id: '/venues',
+  path: '/venues',
+  getParentRoute: () => AdminOrgSlugRoute,
+} as any)
+const AdminOrgSlugTeamsIndexRoute = AdminOrgSlugTeamsIndexRouteImport.update({
+  id: '/teams/',
+  path: '/teams/',
+  getParentRoute: () => AdminOrgSlugRoute,
+} as any)
+const AdminOrgSlugTeamsTeamIdRoute = AdminOrgSlugTeamsTeamIdRouteImport.update({
+  id: '/teams/$teamId',
+  path: '/teams/$teamId',
+  getParentRoute: () => AdminOrgSlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,7 +103,13 @@ export interface FileRoutesByFullPath {
   '/admin/new': typeof AdminNewRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/$orgSlug/divisions': typeof AdminOrgSlugDivisionsRoute
+  '/admin/$orgSlug/people': typeof AdminOrgSlugPeopleRoute
+  '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
+  '/admin/$orgSlug/venues': typeof AdminOrgSlugVenuesRoute
   '/admin/$orgSlug/': typeof AdminOrgSlugIndexRoute
+  '/admin/$orgSlug/teams/$teamId': typeof AdminOrgSlugTeamsTeamIdRoute
+  '/admin/$orgSlug/teams/': typeof AdminOrgSlugTeamsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,7 +117,13 @@ export interface FileRoutesByTo {
   '/admin/new': typeof AdminNewRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/$orgSlug/divisions': typeof AdminOrgSlugDivisionsRoute
+  '/admin/$orgSlug/people': typeof AdminOrgSlugPeopleRoute
+  '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
+  '/admin/$orgSlug/venues': typeof AdminOrgSlugVenuesRoute
   '/admin/$orgSlug': typeof AdminOrgSlugIndexRoute
+  '/admin/$orgSlug/teams/$teamId': typeof AdminOrgSlugTeamsTeamIdRoute
+  '/admin/$orgSlug/teams': typeof AdminOrgSlugTeamsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,7 +134,13 @@ export interface FileRoutesById {
   '/admin/new': typeof AdminNewRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/$orgSlug/divisions': typeof AdminOrgSlugDivisionsRoute
+  '/admin/$orgSlug/people': typeof AdminOrgSlugPeopleRoute
+  '/admin/$orgSlug/seasons': typeof AdminOrgSlugSeasonsRoute
+  '/admin/$orgSlug/venues': typeof AdminOrgSlugVenuesRoute
   '/admin/$orgSlug/': typeof AdminOrgSlugIndexRoute
+  '/admin/$orgSlug/teams/$teamId': typeof AdminOrgSlugTeamsTeamIdRoute
+  '/admin/$orgSlug/teams/': typeof AdminOrgSlugTeamsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -98,7 +152,13 @@ export interface FileRouteTypes {
     | '/admin/new'
     | '/auth/callback'
     | '/admin/'
+    | '/admin/$orgSlug/divisions'
+    | '/admin/$orgSlug/people'
+    | '/admin/$orgSlug/seasons'
+    | '/admin/$orgSlug/venues'
     | '/admin/$orgSlug/'
+    | '/admin/$orgSlug/teams/$teamId'
+    | '/admin/$orgSlug/teams/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,7 +166,13 @@ export interface FileRouteTypes {
     | '/admin/new'
     | '/auth/callback'
     | '/admin'
+    | '/admin/$orgSlug/divisions'
+    | '/admin/$orgSlug/people'
+    | '/admin/$orgSlug/seasons'
+    | '/admin/$orgSlug/venues'
     | '/admin/$orgSlug'
+    | '/admin/$orgSlug/teams/$teamId'
+    | '/admin/$orgSlug/teams'
   id:
     | '__root__'
     | '/'
@@ -116,7 +182,13 @@ export interface FileRouteTypes {
     | '/admin/new'
     | '/auth/callback'
     | '/admin/'
+    | '/admin/$orgSlug/divisions'
+    | '/admin/$orgSlug/people'
+    | '/admin/$orgSlug/seasons'
+    | '/admin/$orgSlug/venues'
     | '/admin/$orgSlug/'
+    | '/admin/$orgSlug/teams/$teamId'
+    | '/admin/$orgSlug/teams/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,15 +256,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrgSlugIndexRouteImport
       parentRoute: typeof AdminOrgSlugRoute
     }
+    '/admin/$orgSlug/divisions': {
+      id: '/admin/$orgSlug/divisions'
+      path: '/divisions'
+      fullPath: '/admin/$orgSlug/divisions'
+      preLoaderRoute: typeof AdminOrgSlugDivisionsRouteImport
+      parentRoute: typeof AdminOrgSlugRoute
+    }
+    '/admin/$orgSlug/people': {
+      id: '/admin/$orgSlug/people'
+      path: '/people'
+      fullPath: '/admin/$orgSlug/people'
+      preLoaderRoute: typeof AdminOrgSlugPeopleRouteImport
+      parentRoute: typeof AdminOrgSlugRoute
+    }
+    '/admin/$orgSlug/seasons': {
+      id: '/admin/$orgSlug/seasons'
+      path: '/seasons'
+      fullPath: '/admin/$orgSlug/seasons'
+      preLoaderRoute: typeof AdminOrgSlugSeasonsRouteImport
+      parentRoute: typeof AdminOrgSlugRoute
+    }
+    '/admin/$orgSlug/venues': {
+      id: '/admin/$orgSlug/venues'
+      path: '/venues'
+      fullPath: '/admin/$orgSlug/venues'
+      preLoaderRoute: typeof AdminOrgSlugVenuesRouteImport
+      parentRoute: typeof AdminOrgSlugRoute
+    }
+    '/admin/$orgSlug/teams/': {
+      id: '/admin/$orgSlug/teams/'
+      path: '/teams'
+      fullPath: '/admin/$orgSlug/teams/'
+      preLoaderRoute: typeof AdminOrgSlugTeamsIndexRouteImport
+      parentRoute: typeof AdminOrgSlugRoute
+    }
+    '/admin/$orgSlug/teams/$teamId': {
+      id: '/admin/$orgSlug/teams/$teamId'
+      path: '/teams/$teamId'
+      fullPath: '/admin/$orgSlug/teams/$teamId'
+      preLoaderRoute: typeof AdminOrgSlugTeamsTeamIdRouteImport
+      parentRoute: typeof AdminOrgSlugRoute
+    }
   }
 }
 
 interface AdminOrgSlugRouteChildren {
+  AdminOrgSlugDivisionsRoute: typeof AdminOrgSlugDivisionsRoute
+  AdminOrgSlugPeopleRoute: typeof AdminOrgSlugPeopleRoute
+  AdminOrgSlugSeasonsRoute: typeof AdminOrgSlugSeasonsRoute
+  AdminOrgSlugVenuesRoute: typeof AdminOrgSlugVenuesRoute
   AdminOrgSlugIndexRoute: typeof AdminOrgSlugIndexRoute
+  AdminOrgSlugTeamsTeamIdRoute: typeof AdminOrgSlugTeamsTeamIdRoute
+  AdminOrgSlugTeamsIndexRoute: typeof AdminOrgSlugTeamsIndexRoute
 }
 
 const AdminOrgSlugRouteChildren: AdminOrgSlugRouteChildren = {
+  AdminOrgSlugDivisionsRoute: AdminOrgSlugDivisionsRoute,
+  AdminOrgSlugPeopleRoute: AdminOrgSlugPeopleRoute,
+  AdminOrgSlugSeasonsRoute: AdminOrgSlugSeasonsRoute,
+  AdminOrgSlugVenuesRoute: AdminOrgSlugVenuesRoute,
   AdminOrgSlugIndexRoute: AdminOrgSlugIndexRoute,
+  AdminOrgSlugTeamsTeamIdRoute: AdminOrgSlugTeamsTeamIdRoute,
+  AdminOrgSlugTeamsIndexRoute: AdminOrgSlugTeamsIndexRoute,
 }
 
 const AdminOrgSlugRouteWithChildren = AdminOrgSlugRoute._addFileChildren(
