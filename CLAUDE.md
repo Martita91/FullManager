@@ -96,7 +96,20 @@ the organization's time zone, never the viewer's.
 
 `VITE_*` is inlined into the browser bundle at build time — nothing secret. Everything
 else is server-only via `process.env`: `SUPABASE_URL`,
-`SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+`SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GUEST_EMAIL`,
+`GUEST_PASSWORD`.
+
+`VITE_*` is read at **build** time and `process.env` at **request** time, so a
+`VITE_` flag describing something the server knows is two copies of one fact,
+and they drift. The guest button cost an afternoon proving it: the flag was
+baked into a build made before the credentials existed, so the button and the
+account it signs into disagreed with nothing on screen to say so. **Never add a
+`VITE_` variable that mirrors server state** — add a server function that
+reports it, the way `getLoginOptions` does.
+
+Vercel scopes variables per environment and binds them when a deployment is
+built. Adding one changes nothing until the deployment that needs it is rebuilt,
+and that is the deployment on the branch being tested — not production.
 
 ## Database
 
