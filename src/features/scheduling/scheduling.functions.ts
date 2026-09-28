@@ -275,6 +275,10 @@ async function buildAllocation(
       "id, round_number, home_team_id, away_team_id, home_team:teams!matches_home_team_id_fkey(name), away_team:teams!matches_away_team_id_fkey(name)",
     )
     .eq("competition_id", input.competitionId)
+    // League rounds only. A knockout's round_number is its position within the
+    // stage, so a semi-final with both teams known would otherwise be slotted
+    // in as "round 1" alongside the opening league fixtures.
+    .eq("stage", "regular")
     .is("kickoff_at", null)
     .eq("status", "scheduled");
   if (matchError) throw new Error(matchError.message);
@@ -306,6 +310,9 @@ async function buildAllocation(
     .from("matches")
     .select("round_number, kickoff_at")
     .eq("competition_id", input.competitionId)
+    // Same reason: a dated semi-final read as "round 1" would push every
+    // unplaced league round after the finals.
+    .eq("stage", "regular")
     .not("kickoff_at", "is", null);
   if (anchorError) throw new Error(anchorError.message);
 
