@@ -1,22 +1,37 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useHydrated } from "@/features/auth/useHydrated";
+import { signInAsGuest } from "@/features/auth/guest.functions";
 
 export const Route = createFileRoute("/login")({
   component: Login,
 });
 
-type Status = { kind: "idle" | "sending" | "sent" | "error"; email?: string };
+type Status =
+  | { kind: "idle" }
+  | { kind: "sending" }
+  | { kind: "sent"; email: string }
+  | { kind: "entering" }
+  // `detail` is whatever the auth server actually said. Swallowing it is how a
+  // rate limit and an unlisted redirect URL came to look like the same problem.
+  | { kind: "error"; detail: string | null }
+  | { kind: "guestError" };
+
+/** The demo button appears only where a demo account has been configured. */
+const guestEnabled = import.meta.env.VITE_GUEST_ACCESS === "true";
 
 function Login() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   // Until React takes over, this form is plain HTML and submitting it does a
   // native GET that silently reloads the page without requesting anything.
   const hydrated = useHydrated();
+
+  const busy = status.kind === "sending" || status.kind === "entering";
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -27,7 +42,22 @@ function Login() {
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
 
-    setStatus(error ? { kind: "error" } : { kind: "sent", email });
+    setStatus(error ? { kind: "error", detail: error.message } : { kind: "sent", email });
+  }
+
+  async function onGuest() {
+    setStatus({ kind: "entering" });
+    try {
+      const guest = await signInAsGuest();
+      const { error } = await supabase.auth.setSession({
+        access_token: guest.accessToken,
+        refresh_token: guest.refreshToken,
+      });
+      if (error) throw error;
+      await navigate({ to: "/admin", replace: true });
+    } catch {
+      setStatus({ kind: "guestError" });
+    }
   }
 
   return (
@@ -51,12 +81,32 @@ function Login() {
 
           <button
             type="submit"
-            disabled={!hydrated || status.kind === "sending"}
+            disabled={!hydrated || busy}
             className="bg-primary text-primary-foreground w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {status.kind === "sending" ? t("auth.sending") : t("auth.sendLink")}
           </button>
         </form>
+
+        {guestEnabled && (
+          <>
+            <div className="my-5 flex items-center gap-3">
+              <span className="border-border h-px flex-1 border-t" />
+              <span className="text-muted-foreground text-xs">{t("auth.or")}</span>
+              <span className="border-border h-px flex-1 border-t" />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void onGuest()}
+              disabled={!hydrated || busy}
+              className="border-input hover:bg-muted w-full rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60"
+            >
+              {status.kind === "entering" ? t("auth.guestWorking") : t("auth.guestButton")}
+            </button>
+            <p className="text-muted-foreground mt-2 text-center text-xs">{t("auth.guestHint")}</p>
+          </>
+        )}
 
         {status.kind === "sent" && (
           <p className="mt-4 text-sm text-emerald-600">
@@ -64,7 +114,13 @@ function Login() {
           </p>
         )}
         {status.kind === "error" && (
-          <p className="text-destructive mt-4 text-sm">{t("auth.linkError")}</p>
+          <div className="mt-4">
+            <p className="text-destructive text-sm">{t("auth.linkError")}</p>
+            {status.detail && <p className="text-muted-foreground mt-1 text-xs">{status.detail}</p>}
+          </div>
+        )}
+        {status.kind === "guestError" && (
+          <p className="text-destructive mt-4 text-sm">{t("auth.guestError")}</p>
         )}
       </div>
     </main>

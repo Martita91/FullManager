@@ -170,7 +170,7 @@ a new `useQuery`: **if no mutation in the app invalidates its key by name, it is
 live** and must pass `staleTime: LIVE_STALE_TIME`. Everything else inherits the
 catalog default and stays correct because its own mutations invalidate it.
 
-The ones that are live are the ones computed from rows under a *different* key —
+The ones that are live are the ones computed from rows under a _different_ key —
 the ladder, the discipline table, the bracket, the overview, the player app.
 Saving a score invalidates the match list and tells none of them.
 
