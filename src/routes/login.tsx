@@ -3,9 +3,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useHydrated } from "@/features/auth/useHydrated";
-import { signInAsGuest } from "@/features/auth/guest.functions";
+import { getLoginOptions, signInAsGuest } from "@/features/auth/guest.functions";
 
 export const Route = createFileRoute("/login")({
+  loader: () => getLoginOptions(),
   component: Login,
 });
 
@@ -19,12 +20,12 @@ type Status =
   | { kind: "error"; detail: string | null }
   | { kind: "guestError" };
 
-/** The demo button appears only where a demo account has been configured. */
-const guestEnabled = import.meta.env.VITE_GUEST_ACCESS === "true";
-
 function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // Answered by the server that holds the credentials, so the button and the
+  // account behind it can never disagree.
+  const { guestEnabled } = Route.useLoaderData();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   // Until React takes over, this form is plain HTML and submitting it does a

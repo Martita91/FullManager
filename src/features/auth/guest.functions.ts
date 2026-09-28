@@ -26,6 +26,22 @@ export interface GuestSession {
   refreshToken: string;
 }
 
+/**
+ * Whether to offer the demo at all.
+ *
+ * This is asked of the server rather than read from a `VITE_` flag on purpose.
+ * A build-time flag is a second copy of the truth, and the two can disagree —
+ * a flag set for one environment and not another, or a value that never made
+ * it into the bundle, gives you a button with no account behind it or, as
+ * happened here, an account with no button in front of it. There is only one
+ * fact worth asking about: are the credentials configured on this server.
+ */
+export const getLoginOptions = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ guestEnabled: boolean }> => ({
+    guestEnabled: Boolean(process.env.GUEST_EMAIL && process.env.GUEST_PASSWORD),
+  }),
+);
+
 export const signInAsGuest = createServerFn({ method: "POST" }).handler(
   async (): Promise<GuestSession> => {
     const email = process.env.GUEST_EMAIL;
