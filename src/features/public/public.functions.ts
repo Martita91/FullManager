@@ -112,18 +112,36 @@ export const getPublicCompetition = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<PublicCompetition | null> => {
     const supabase = publicSupabase();
 
-    const { data: comp, error } = await supabase
-      .from("competitions")
-      .select(
-        "id, name, points_win, points_draw, points_loss, seasons(name), divisions(name), organizations(id, slug, name, timezone)",
-      )
-      .eq("id", data.competitionId)
-      .maybeSingle();
+    // Three queries, one identifier, no dependencies between them. This is the
+    // page a prospect clicks first, and it was making them in single file.
+    const [comp, registrations, matches] = await Promise.all([
+      supabase
+        .from("competitions")
+        .select(
+          "id, name, points_win, points_draw, points_loss, seasons(name), divisions(name), organizations(id, slug, name, timezone)",
+        )
+        .eq("id", data.competitionId)
+        .maybeSingle(),
 
-    if (error) throw new Error(error.message);
-    if (!comp) return null;
+      supabase
+        .from("team_registrations")
+        .select("team_id, teams(name)")
+        .eq("competition_id", data.competitionId),
 
-    const row = comp as unknown as {
+      supabase
+        .from("matches")
+        .select(MATCH_SELECT)
+        .eq("competition_id", data.competitionId)
+        .order("round_number", { nullsFirst: false })
+        .order("kickoff_at", { nullsFirst: false }),
+    ]);
+
+    if (comp.error) throw new Error(comp.error.message);
+    if (!comp.data) return null;
+    if (registrations.error) throw new Error(registrations.error.message);
+    if (matches.error) throw new Error(matches.error.message);
+
+    const row = comp.data as unknown as {
       id: string;
       name: string;
       points_win: number;
@@ -136,20 +154,6 @@ export const getPublicCompetition = createServerFn({ method: "GET" })
 
     if (!row.organizations) return null;
 
-    const { data: registrations, error: regError } = await supabase
-      .from("team_registrations")
-      .select("team_id, teams(name)")
-      .eq("competition_id", data.competitionId);
-    if (regError) throw new Error(regError.message);
-
-    const { data: matches, error: matchError } = await supabase
-      .from("matches")
-      .select(MATCH_SELECT)
-      .eq("competition_id", data.competitionId)
-      .order("round_number", { nullsFirst: false })
-      .order("kickoff_at", { nullsFirst: false });
-    if (matchError) throw new Error(matchError.message);
-
     return {
       id: row.id,
       name: row.name,
@@ -158,7 +162,7 @@ export const getPublicCompetition = createServerFn({ method: "GET" })
       organization: row.organizations,
       points: { win: row.points_win, draw: row.points_draw, loss: row.points_loss },
       teams: (
-        (registrations ?? []) as unknown as {
+        (registrations.data ?? []) as unknown as {
           team_id: string;
           teams: { name: string } | null;
         }[]
@@ -166,7 +170,7 @@ export const getPublicCompetition = createServerFn({ method: "GET" })
         .map((r) => ({ id: r.team_id, name: r.teams?.name ?? "" }))
         .sort((a, b) => a.name.localeCompare(b.name)),
       matches: (
-        (matches ?? []) as unknown as {
+        (matches.data ?? []) as unknown as {
           id: string;
           round_number: number | null;
           home_team_id: string | null;

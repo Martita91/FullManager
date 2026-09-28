@@ -21,17 +21,22 @@ const SECTIONS = [
  * Membership gate plus section nav. RLS already refuses to return an
  * organization the user isn't a member of, so this screen is about saying so
  * clearly rather than about enforcement — the database is what enforces.
+ *
+ * It renders its children while that check is still in flight, and this is the
+ * point: blocking on `isPending` put the whole app in single file. The child
+ * screen was not mounted, so its own query had not been sent, so the league's
+ * data only started loading once the membership answer came back — two round
+ * trips to Perth and back where one would do. Every member passes this check,
+ * so waiting for it was paying the cost of the rare case on every visit.
  */
 function OrganizationLayout() {
   const { t } = useTranslation();
   const { orgSlug } = Route.useParams();
   const membership = useOrgMembership(orgSlug);
 
-  if (membership.isPending) {
-    return <Centered title={t("common.loading")} />;
-  }
-
-  if (!membership.data) {
+  // Only once the answer is in. While it is pending the nav and the child
+  // render, and the child's queries are already on their way.
+  if (!membership.isPending && !membership.data) {
     return <Centered title={t("errors.forbiddenTitle")} body={t("errors.forbiddenBody")} />;
   }
 

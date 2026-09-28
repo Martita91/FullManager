@@ -25,30 +25,35 @@ export const getDiscipline = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<DisciplineView> => {
     await requireOrgAccess(context.supabase, context.userId, data.orgSlug);
 
-    const { data: competition, error: compError } = await context.supabase
-      .from("competitions")
-      .select("suspension_yellow_cards")
-      .eq("id", data.competitionId)
-      .single();
-    if (compError) throw new Error(compError.message);
+    // All three are keyed by the competition alone, so none of them has any
+    // reason to wait for the others.
+    const [competition, cardRows, matchRows] = await Promise.all([
+      context.supabase
+        .from("competitions")
+        .select("suspension_yellow_cards")
+        .eq("id", data.competitionId)
+        .single(),
 
-    // Cards live on match_events; the round they were shown in lives on the
-    // match, which is why this reads through the join rather than the event.
-    const { data: eventRows, error: eventError } = await context.supabase
-      .from("match_events")
-      .select(
-        "person_id, team_id, sport_event_types!inner(key), people(first_name, last_name), teams(name), matches!inner(round_number, competition_id, stage)",
-      )
-      .eq("matches.competition_id", data.competitionId)
-      .in("sport_event_types.key", ["yellow_card", "red_card"]);
-    if (eventError) throw new Error(eventError.message);
+      // Cards live on match_events; the round they were shown in lives on the
+      // match, which is why this reads through the join rather than the event.
+      context.supabase
+        .from("match_events")
+        .select(
+          "person_id, team_id, sport_event_types!inner(key), people(first_name, last_name), teams(name), matches!inner(round_number, competition_id, stage)",
+        )
+        .eq("matches.competition_id", data.competitionId)
+        .in("sport_event_types.key", ["yellow_card", "red_card"]),
 
-    const { data: matchRows, error: matchError } = await context.supabase
-      .from("matches")
-      .select("round_number, home_team_id, away_team_id")
-      .eq("competition_id", data.competitionId)
-      .eq("stage", "regular");
-    if (matchError) throw new Error(matchError.message);
+      context.supabase
+        .from("matches")
+        .select("round_number, home_team_id, away_team_id")
+        .eq("competition_id", data.competitionId)
+        .eq("stage", "regular"),
+    ]);
+
+    if (competition.error) throw new Error(competition.error.message);
+    if (cardRows.error) throw new Error(cardRows.error.message);
+    if (matchRows.error) throw new Error(matchRows.error.message);
 
     type EventRecord = {
       person_id: string | null;
@@ -59,7 +64,7 @@ export const getDiscipline = createServerFn({ method: "GET" })
       matches: { round_number: number | null } | null;
     };
 
-    const records = (eventRows ?? []) as unknown as EventRecord[];
+    const records = (cardRows.data ?? []) as unknown as EventRecord[];
 
     const teamNames = new Map<string, string>();
     for (const record of records) {
@@ -79,7 +84,7 @@ export const getDiscipline = createServerFn({ method: "GET" })
       }));
 
     const teamRounds: TeamRound[] = (
-      (matchRows ?? []) as {
+      (matchRows.data ?? []) as {
         round_number: number | null;
         home_team_id: string | null;
         away_team_id: string | null;
@@ -92,7 +97,8 @@ export const getDiscipline = createServerFn({ method: "GET" })
             .map((teamId) => ({ teamId, round: m.round_number! })),
     );
 
-    const threshold = (competition as { suspension_yellow_cards: number }).suspension_yellow_cards;
+    const threshold = (competition.data as { suspension_yellow_cards: number })
+      .suspension_yellow_cards;
     const options = { yellowsForSuspension: threshold };
 
     const withTeamName = <T extends { teamId: string }>(row: T) => ({

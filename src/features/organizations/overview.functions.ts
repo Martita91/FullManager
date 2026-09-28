@@ -54,73 +54,88 @@ export const getOrgOverview = createServerFn({ method: "GET" })
       return count ?? 0;
     };
 
-    const [competitions, teams, people, venues, seasons, divisions] = await Promise.all([
+    const now = new Date().toISOString();
+
+    // Eleven independent questions, asked at once.
+    //
+    // This is the whole reason the dashboard was the slowest screen in the
+    // app: the six counters already ran together, and then five more queries
+    // went out one at a time, each waiting on an answer it had no use for.
+    // Nothing below depends on anything else below it.
+    const [
+      competitions,
+      teams,
+      people,
+      venues,
+      seasons,
+      divisions,
+      upcoming,
+      missing,
+      noKickoff,
+      comps,
+      org,
+    ] = await Promise.all([
       countOf("competitions"),
       countOf("teams"),
       countOf("people"),
       countOf("venues"),
       countOf("seasons"),
       countOf("divisions"),
+
+      supabase
+        .from("matches")
+        .select(
+          "id, kickoff_at, competitions(name), home_team:teams!matches_home_team_id_fkey(name), away_team:teams!matches_away_team_id_fkey(name), pitches(venues(name))",
+        )
+        .eq("org_id", orgId)
+        .eq("status", "scheduled")
+        .not("kickoff_at", "is", null)
+        .gte("kickoff_at", now)
+        .order("kickoff_at")
+        .limit(5),
+
+      // Played in the past but still without a score: the single most common
+      // thing a league forgets.
+      supabase
+        .from("matches")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .eq("status", "scheduled")
+        .not("kickoff_at", "is", null)
+        .lt("kickoff_at", now),
+
+      supabase
+        .from("matches")
+        .select("*", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .eq("status", "scheduled")
+        .is("kickoff_at", null),
+
+      supabase
+        .from("competitions")
+        .select("id, is_published, team_registrations(count), matches(count)")
+        .eq("org_id", orgId),
+
+      supabase.from("organizations").select("timezone").eq("id", orgId).single(),
     ]);
 
-    const now = new Date().toISOString();
+    if (upcoming.error) throw new Error(upcoming.error.message);
+    if (missing.error) throw new Error(missing.error.message);
+    if (noKickoff.error) throw new Error(noKickoff.error.message);
+    if (comps.error) throw new Error(comps.error.message);
+    if (org.error) throw new Error(org.error.message);
 
-    const { data: upcomingRows, error: upcomingError } = await supabase
-      .from("matches")
-      .select(
-        "id, kickoff_at, competitions(name), home_team:teams!matches_home_team_id_fkey(name), away_team:teams!matches_away_team_id_fkey(name), pitches(venues(name))",
-      )
-      .eq("org_id", orgId)
-      .eq("status", "scheduled")
-      .not("kickoff_at", "is", null)
-      .gte("kickoff_at", now)
-      .order("kickoff_at")
-      .limit(5);
-    if (upcomingError) throw new Error(upcomingError.message);
-
-    // Played in the past but still without a score: the single most common
-    // thing a league forgets.
-    const { count: missingResults, error: missingError } = await supabase
-      .from("matches")
-      .select("*", { count: "exact", head: true })
-      .eq("org_id", orgId)
-      .eq("status", "scheduled")
-      .not("kickoff_at", "is", null)
-      .lt("kickoff_at", now);
-    if (missingError) throw new Error(missingError.message);
-
-    const { count: matchesWithoutKickoff, error: noKickoffError } = await supabase
-      .from("matches")
-      .select("*", { count: "exact", head: true })
-      .eq("org_id", orgId)
-      .eq("status", "scheduled")
-      .is("kickoff_at", null);
-    if (noKickoffError) throw new Error(noKickoffError.message);
-
-    const { data: compRows, error: compError } = await supabase
-      .from("competitions")
-      .select("id, is_published, team_registrations(count), matches(count)")
-      .eq("org_id", orgId);
-    if (compError) throw new Error(compError.message);
-
-    const comps = (compRows ?? []) as unknown as {
+    const competitionRows = (comps.data ?? []) as unknown as {
       is_published: boolean;
       team_registrations: { count: number }[];
       matches: { count: number }[];
     }[];
 
-    const { data: org, error: orgError } = await supabase
-      .from("organizations")
-      .select("timezone")
-      .eq("id", orgId)
-      .single();
-    if (orgError) throw new Error(orgError.message);
-
     return {
       counts: { competitions, teams, people, venues, seasons, divisions },
-      timeZone: (org as { timezone: string }).timezone,
+      timeZone: (org.data as { timezone: string }).timezone,
       upcoming: (
-        (upcomingRows ?? []) as unknown as {
+        (upcoming.data ?? []) as unknown as {
           id: string;
           kickoff_at: string;
           competitions: { name: string } | null;
@@ -137,12 +152,12 @@ export const getOrgOverview = createServerFn({ method: "GET" })
         venueName: m.pitches?.venues?.name ?? null,
       })),
       attention: {
-        missingResults: missingResults ?? 0,
-        matchesWithoutKickoff: matchesWithoutKickoff ?? 0,
-        competitionsWithoutFixture: comps.filter(
+        missingResults: missing.count ?? 0,
+        matchesWithoutKickoff: noKickoff.count ?? 0,
+        competitionsWithoutFixture: competitionRows.filter(
           (c) => (c.team_registrations?.[0]?.count ?? 0) > 0 && (c.matches?.[0]?.count ?? 0) === 0,
         ).length,
-        unpublishedWithFixture: comps.filter(
+        unpublishedWithFixture: competitionRows.filter(
           (c) => !c.is_published && (c.matches?.[0]?.count ?? 0) > 0,
         ).length,
       },

@@ -117,23 +117,27 @@ export const getTeam = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<{ team: Team; members: TeamMember[] } | null> => {
     await requireOrgAccess(context.supabase, context.userId, data.orgSlug);
 
-    const { data: team, error: teamError } = await context.supabase
-      .from("teams")
-      .select("id, name, short_name, status")
-      .eq("id", data.teamId)
-      .maybeSingle();
+    // Both are keyed by the team id. Fetching the roster only after the team
+    // came back doubled the wait for a screen that always needs both, in
+    // exchange for skipping one query on the rare miss.
+    const [team, roster] = await Promise.all([
+      context.supabase
+        .from("teams")
+        .select("id, name, short_name, status")
+        .eq("id", data.teamId)
+        .maybeSingle(),
 
-    if (teamError) throw new Error(teamError.message);
-    if (!team) return null;
+      context.supabase
+        .from("team_memberships")
+        .select("person_id, role, shirt_number, status, people(first_name, last_name)")
+        .eq("team_id", data.teamId),
+    ]);
 
-    const { data: rows, error } = await context.supabase
-      .from("team_memberships")
-      .select("person_id, role, shirt_number, status, people(first_name, last_name)")
-      .eq("team_id", data.teamId);
+    if (team.error) throw new Error(team.error.message);
+    if (!team.data) return null;
+    if (roster.error) throw new Error(roster.error.message);
 
-    if (error) throw new Error(error.message);
-
-    const members = ((rows ?? []) as unknown as MemberRow[])
+    const members = ((roster.data ?? []) as unknown as MemberRow[])
       .map((r) => ({
         personId: r.person_id,
         firstName: r.people?.first_name ?? "",
@@ -144,7 +148,12 @@ export const getTeam = createServerFn({ method: "GET" })
       }))
       .sort((a, b) => a.lastName.localeCompare(b.lastName));
 
-    const t = team as { id: string; name: string; short_name: string | null; status: EntityStatus };
+    const t = team.data as {
+      id: string;
+      name: string;
+      short_name: string | null;
+      status: EntityStatus;
+    };
     return {
       team: {
         id: t.id,

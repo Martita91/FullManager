@@ -146,6 +146,34 @@ That last one is the rule worth remembering: **never cast Supabase rows into a
 domain type.** Map the columns explicitly. The cast turns a compile error into a
 silent, plausible-looking wrong answer.
 
+## Latency is the performance problem, not throughput
+
+Nothing here is slow to compute. Everything here is slow because it waits. A
+server function costs a round trip from the browser to Vercel and then one or
+more to Supabase, and those are the only numbers that matter:
+
+- **Never `await` two queries that don't depend on each other.** `Promise.all`.
+  This is the whole reason the dashboard was the slowest screen in the app.
+- **A layout must not block its children on `isPending`.** An unmounted child
+  hasn't sent its query yet, so gating on a membership check turns two parallel
+  requests into two sequential ones for every visitor, to catch a case that
+  almost never happens. Render the children and show the refusal once the
+  answer is actually in.
+- `requireSupabaseAuth` and `requireOrgAccess` each cache for 30 seconds per
+  instance. Both are about giving a clear answer, not about safety — RLS
+  re-checks every statement and never consults either cache.
+
+## Query staleness: catalog or live
+
+`src/lib/query/staleness.ts` has the two values and the reasoning. The rule for
+a new `useQuery`: **if no mutation in the app invalidates its key by name, it is
+live** and must pass `staleTime: LIVE_STALE_TIME`. Everything else inherits the
+catalog default and stays correct because its own mutations invalidate it.
+
+The ones that are live are the ones computed from rows under a *different* key —
+the ladder, the discipline table, the bracket, the overview, the player app.
+Saving a score invalidates the match list and tells none of them.
+
 ## Testing
 
 Vitest. The suite is deliberately narrow: pure logic where correctness matters

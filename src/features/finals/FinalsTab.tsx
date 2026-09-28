@@ -10,6 +10,7 @@ import {
   type FinalsMatch,
 } from "./finals.functions";
 import { BRACKET_SIZES, type FinalsStage } from "@/lib/finals/bracket";
+import { LIVE_STALE_TIME } from "@/lib/query/staleness";
 import { formatKickoff } from "@/lib/time/zoned";
 import { Button, Card, EmptyState, ErrorNote, Field, Select } from "@/components/ui/controls";
 
@@ -40,9 +41,12 @@ export function FinalsTab({
   const [thirdPlace, setThirdPlace] = useState(true);
   const [resolved, setResolved] = useState<number | null>(null);
 
+  // A knockout score saved from a match card invalidates the match list, not
+  // this bracket, so the bracket refetches whenever the tab is opened.
   const finals = useQuery({
     queryKey: ["finals", competitionId],
     queryFn: () => getFinals({ data: { orgSlug, competitionId } }),
+    staleTime: LIVE_STALE_TIME,
   });
 
   const invalidate = async () => {

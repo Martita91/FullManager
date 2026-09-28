@@ -12,6 +12,7 @@ import {
 } from "@/features/player/player.functions";
 import { listMyOrganizations } from "@/features/organizations/organizations.functions";
 import { usePwaInstall } from "@/features/pwa/usePwaInstall";
+import { LIVE_STALE_TIME } from "@/lib/query/staleness";
 import { formatKickoff } from "@/lib/time/zoned";
 import { branding } from "@/lib/branding";
 import { Button, Card, EmptyState, ErrorNote, Select } from "@/components/ui/controls";
@@ -134,13 +135,18 @@ function ProfileSection({ profile }: { profile: PlayerProfile }) {
   const { t } = useTranslation();
   const teamIds = profile.teams.map((team) => team.id);
 
+  // The player app is read-only: what it shows changes when league staff enter
+  // a result somewhere else entirely, and nothing in this browser will ever
+  // invalidate these. On a matchday that difference is the whole point.
   const matches = useQuery({
     queryKey: ["my-matches", profile.personId, teamIds],
     queryFn: () => getMyMatches({ data: { teamIds } }),
+    staleTime: LIVE_STALE_TIME,
   });
   const stats = useQuery({
     queryKey: ["my-stats", profile.personId],
     queryFn: () => getMyStats({ data: { personId: profile.personId } }),
+    staleTime: LIVE_STALE_TIME,
   });
 
   const upcoming = (matches.data ?? []).filter((m) => m.status === "scheduled");

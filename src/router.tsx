@@ -2,6 +2,7 @@ import { createRouter } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 import { initI18n } from "./i18n";
+import { CATALOG_STALE_TIME } from "./lib/query/staleness";
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -18,9 +19,10 @@ export function getRouter() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        // Anything a league admin changes should be visible on the next screen,
-        // not up to five minutes later.
-        staleTime: 10_000,
+        // Anything a league admin changes is still visible on the next screen:
+        // every mutation invalidates the key it touched, which is what makes
+        // this safe. See `staleness.ts` for the queries that opt out.
+        staleTime: CATALOG_STALE_TIME,
         retry: 1,
       },
     },

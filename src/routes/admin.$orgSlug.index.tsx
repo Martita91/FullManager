@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { getOrgOverview } from "@/features/organizations/overview.functions";
 import { useOrgMembership } from "@/features/organizations/useOrgMembership";
+import { LIVE_STALE_TIME } from "@/lib/query/staleness";
 import { formatKickoff } from "@/lib/time/zoned";
 import { CatalogPage } from "@/components/CatalogPage";
 import { Card, EmptyState } from "@/components/ui/controls";
@@ -21,9 +22,13 @@ function OrganizationDashboard() {
   const { orgSlug } = Route.useParams();
   const { organization } = useOrgMembership(orgSlug);
 
+  // Counts and warnings drawn from every table in the league. No mutation
+  // anywhere invalidates this key, so it has to refetch on each visit — which
+  // is also what makes "needs attention" trustworthy after you fix something.
   const overview = useQuery({
     queryKey: ["overview", orgSlug],
     queryFn: () => getOrgOverview({ data: { orgSlug } }),
+    staleTime: LIVE_STALE_TIME,
   });
 
   const data = overview.data;

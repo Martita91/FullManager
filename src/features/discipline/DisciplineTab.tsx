@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { getDiscipline } from "./discipline.functions";
+import { LIVE_STALE_TIME } from "@/lib/query/staleness";
 import { Card, EmptyState, TableWrap, Td, Th } from "@/components/ui/controls";
 
 export function DisciplineTab({
@@ -12,9 +13,12 @@ export function DisciplineTab({
 }) {
   const { t } = useTranslation();
 
+  // Cards are added from the match card, which invalidates the match list and
+  // has no idea this table exists. Computed from those rows, so: always fresh.
   const discipline = useQuery({
     queryKey: ["discipline", competitionId],
     queryFn: () => getDiscipline({ data: { orgSlug, competitionId } }),
+    staleTime: LIVE_STALE_TIME,
   });
 
   if (discipline.isPending) {
