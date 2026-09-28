@@ -27,6 +27,7 @@ export interface PublicCompetitionSummary {
 
 export interface PublicMatch {
   id: string;
+  stage: string;
   round: number | null;
   homeTeamId: string | null;
   awayTeamId: string | null;
@@ -48,8 +49,21 @@ export interface PublicCompetition {
   organization: PublicOrganization;
   points: { win: number; draw: number; loss: number };
   teams: { id: string; name: string }[];
+  /**
+   * League phase only, and split from the knockouts on purpose rather than
+   * handed over with a `stage` field for the caller to remember to filter on.
+   *
+   * Forgetting it here put the finals on the public ladder: every team showed
+   * eight games played instead of six, the champion's points were inflated by
+   * its own cup run, and second place went to the wrong club. The knockout
+   * matches also appeared in the results list as extra "round 1" fixtures,
+   * because `round_number` counts position within a stage there.
+   */
   matches: PublicMatch[];
+  finals: PublicMatch[];
 }
+
+const STAGE_ORDER = ["quarter_final", "semi_final", "third_place", "final"];
 
 export const getPublicOrganization = createServerFn({ method: "GET" })
   .validator((input: unknown) => z.object({ slug: z.string().trim().min(1).max(48) }).parse(input))
@@ -102,7 +116,7 @@ export const getPublicOrganization = createServerFn({ method: "GET" })
   );
 
 const MATCH_SELECT =
-  "id, round_number, home_team_id, away_team_id, kickoff_at, status, home_score, away_score," +
+  "id, stage, round_number, home_team_id, away_team_id, kickoff_at, status, home_score, away_score," +
   "home_team:teams!matches_home_team_id_fkey(name)," +
   "away_team:teams!matches_away_team_id_fkey(name)," +
   "pitches(name, venues(name))";
@@ -154,6 +168,37 @@ export const getPublicCompetition = createServerFn({ method: "GET" })
 
     if (!row.organizations) return null;
 
+    const allMatches = (
+      (matches.data ?? []) as unknown as {
+        id: string;
+        stage: string;
+        round_number: number | null;
+        home_team_id: string | null;
+        away_team_id: string | null;
+        kickoff_at: string | null;
+        status: MatchStatus;
+        home_score: number | null;
+        away_score: number | null;
+        home_team: { name: string } | null;
+        away_team: { name: string } | null;
+        pitches: { name: string; venues: { name: string } | null } | null;
+      }[]
+    ).map((m) => ({
+      id: m.id,
+      stage: m.stage,
+      round: m.round_number,
+      homeTeamId: m.home_team_id,
+      awayTeamId: m.away_team_id,
+      homeTeamName: m.home_team?.name ?? null,
+      awayTeamName: m.away_team?.name ?? null,
+      kickoffAt: m.kickoff_at,
+      venueName: m.pitches?.venues?.name ?? null,
+      pitchName: m.pitches?.name ?? null,
+      status: m.status,
+      homeScore: m.home_score,
+      awayScore: m.away_score,
+    }));
+
     return {
       id: row.id,
       name: row.name,
@@ -169,33 +214,13 @@ export const getPublicCompetition = createServerFn({ method: "GET" })
       )
         .map((r) => ({ id: r.team_id, name: r.teams?.name ?? "" }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-      matches: (
-        (matches.data ?? []) as unknown as {
-          id: string;
-          round_number: number | null;
-          home_team_id: string | null;
-          away_team_id: string | null;
-          kickoff_at: string | null;
-          status: MatchStatus;
-          home_score: number | null;
-          away_score: number | null;
-          home_team: { name: string } | null;
-          away_team: { name: string } | null;
-          pitches: { name: string; venues: { name: string } | null } | null;
-        }[]
-      ).map((m) => ({
-        id: m.id,
-        round: m.round_number,
-        homeTeamId: m.home_team_id,
-        awayTeamId: m.away_team_id,
-        homeTeamName: m.home_team?.name ?? null,
-        awayTeamName: m.away_team?.name ?? null,
-        kickoffAt: m.kickoff_at,
-        venueName: m.pitches?.venues?.name ?? null,
-        pitchName: m.pitches?.name ?? null,
-        status: m.status,
-        homeScore: m.home_score,
-        awayScore: m.away_score,
-      })),
+      matches: allMatches.filter((m) => m.stage === "regular"),
+      finals: allMatches
+        .filter((m) => m.stage !== "regular")
+        .sort(
+          (a, b) =>
+            STAGE_ORDER.indexOf(a.stage) - STAGE_ORDER.indexOf(b.stage) ||
+            (a.round ?? 0) - (b.round ?? 0),
+        ),
     };
   });

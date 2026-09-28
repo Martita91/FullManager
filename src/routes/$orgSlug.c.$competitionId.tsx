@@ -8,6 +8,14 @@ import { competitionDescription, seoMeta } from "@/lib/seo";
 import { Shell } from "./$orgSlug.index";
 import { EmptyState, TableWrap, Td, Th } from "@/components/ui/controls";
 
+/** The labels already exist for the admin bracket; the public page reuses them. */
+const FINALS_STAGE_KEY: Record<string, string> = {
+  quarter_final: "finals.stageQuarterFinal",
+  semi_final: "finals.stageSemiFinal",
+  final: "finals.stageFinal",
+  third_place: "finals.stageThirdPlace",
+};
+
 export const Route = createFileRoute("/$orgSlug/c/$competitionId")({
   loader: ({ params }) => getPublicCompetition({ data: { competitionId: params.competitionId } }),
   head: ({ loaderData, params }) => {
@@ -153,6 +161,43 @@ function PublicCompetitionPage() {
           <EmptyState title={t("publicSite.noResults")} />
         )}
       </section>
+
+      {data.finals.length > 0 && (
+        <section className="mt-10">
+          <h2 className="label-caps text-muted-foreground mb-3 text-[0.68rem]">
+            {t("publicSite.finalsTitle")}
+          </h2>
+          <ul className="space-y-2">
+            {data.finals.map((match) => {
+              // A stage this build doesn't know about is labelled with nothing
+              // rather than with a missing translation key.
+              const stageKey = FINALS_STAGE_KEY[match.stage];
+              const played = match.status === "played" || match.status === "forfeit";
+
+              return (
+                <li
+                  key={match.id}
+                  className="border-border bg-card flex flex-wrap items-baseline justify-between gap-2 rounded-lg border px-4 py-3 text-sm"
+                >
+                  <span className="font-medium">
+                    {match.homeTeamName ?? t("finals.tbd")}{" "}
+                    {played ? (
+                      <>
+                        <span className="num">{match.homeScore}</span> –{" "}
+                        <span className="num">{match.awayScore}</span>
+                      </>
+                    ) : (
+                      "v"
+                    )}{" "}
+                    {match.awayTeamName ?? t("finals.tbd")}
+                  </span>
+                  <span className="text-muted-foreground">{stageKey ? t(stageKey) : ""}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <p className="text-muted-foreground mt-8 text-xs">{t("publicSite.timesIn", { timeZone })}</p>
     </Shell>

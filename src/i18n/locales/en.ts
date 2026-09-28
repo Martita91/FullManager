@@ -403,6 +403,7 @@ export const en = {
     round: "Round",
     upcoming: "Upcoming",
     results: "Results",
+    finalsTitle: "Finals",
     noResults: "No results yet.",
     noUpcoming: "Nothing scheduled yet.",
     timesIn: "All times shown in {{timeZone}}.",
