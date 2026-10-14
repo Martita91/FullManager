@@ -1,0 +1,27 @@
+# Supabase pauses free projects after a week with no activity, and a paused
+# project takes the whole app down until someone restores it by hand.
+#
+# Loading a public league page is real activity: its loader queries Supabase
+# as an anonymous visitor, so this needs no keys and touches nothing private.
+# If the project is already paused the page answers 500, the job fails, and
+# GitHub emails the repo owner — so this doubles as the alarm.
+#
+# GitHub disables scheduled workflows in a repo with no commits for 60 days.
+# If the app stops being worked on, re-enable this from the Actions tab.
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "17 2 * * *" # daily, 10:17 in Perth
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Load a public league page
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 \
+            https://full-manager-nine.vercel.app/the-football-center)
+          echo "HTTP $status"
+          test "$status" = "200"
